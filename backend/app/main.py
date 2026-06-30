@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from app.api.health import router as health_router
+from app.core.config import settings
 
 app = FastAPI(
-    title="StockWise API",
+    title=settings.PROJECT_NAME,
     description="API principal para la plataforma StockWise",
-    version="1.0.0"
+    version=settings.PROJECT_VERSION
 )
 
 app.include_router(health_router)
@@ -14,5 +15,6 @@ app.include_router(health_router)
 def read_root():
     return {
         "message": "StockWise API funcionando correctamente",
+        "environment": settings.ENVIRONMENT,
         "status": "ok"
     }
