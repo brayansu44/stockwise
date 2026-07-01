@@ -1,53 +1,63 @@
 # StockWise - Project Overview
 
-## 1. Descripción general
+## 1. Project Overview
 
-StockWise es una plataforma web para la gestión inteligente de inventario, ventas, alertas y reportes operativos, orientada a pequeños negocios que necesitan controlar sus productos, registrar movimientos y tomar mejores decisiones sobre su operación.
+StockWise is a web-based Software as a Service (SaaS) platform designed to help small and medium-sized businesses efficiently manage inventory, sales, stock alerts, and operational reporting.
 
-El proyecto será desarrollado con una arquitectura modular, utilizando Python, FastAPI, PostgreSQL y React, incorporando buenas prácticas de desarrollo como autenticación, validación de datos, consumo de APIs externas, pruebas automatizadas, contenedores Docker y documentación técnica.
+The project is built using a modular architecture with Python, FastAPI, PostgreSQL, and React, following modern software engineering practices such as authentication, data validation, external API integration, automated testing, Docker containerization, and comprehensive technical documentation.
 
-## 2. Problema que resuelve
+---
 
-Muchos pequeños negocios gestionan su inventario de forma manual, en hojas de cálculo o mediante procesos poco organizados. Esto puede generar errores en el control de stock, pérdida de información, dificultad para conocer productos con baja disponibilidad y poca visibilidad sobre las ventas.
+## 2. Problem Statement
 
-StockWise busca centralizar esta información en una plataforma web, permitiendo tener mayor control, trazabilidad y análisis sobre el inventario y las ventas.
+Many small businesses still manage their inventory using spreadsheets or manual processes. These approaches often lead to inventory inaccuracies, stock shortages, duplicated information, and limited visibility into business operations.
 
-## 3. Objetivo general
+StockWise aims to centralize inventory and sales management in a single platform, providing better traceability, operational efficiency, and data-driven decision-making.
 
-Desarrollar una plataforma web para gestionar inventario, ventas, alertas y reportes operativos de pequeños negocios, aplicando una arquitectura modular y tecnologías modernas de desarrollo web.
+---
 
-## 4. Objetivos específicos
+## 3. Project Goal
 
-- Implementar autenticación y gestión de usuarios.
-- Registrar productos, categorías y movimientos de inventario.
-- Gestionar ventas y actualización automática del stock.
-- Generar alertas de stock bajo.
-- Construir reportes operativos y dashboard.
-- Consumir APIs externas para agregar funcionalidades reales.
-- Documentar la arquitectura, decisiones técnicas y modelo de datos.
-- Preparar el proyecto para una futura evolución hacia microservicios.
+Design and develop a scalable web platform that enables small and medium-sized businesses to manage inventory, sales, stock alerts, and operational reports using modern software architecture and development practices.
 
-## 5. Alcance inicial
+---
 
-La primera versión del sistema incluirá:
+## 4. Objectives
 
-- Login de usuarios.
-- Gestión de productos.
-- Gestión de categorías.
-- Entradas y salidas de inventario.
-- Registro de ventas.
-- Alertas de stock bajo.
-- Dashboard inicial.
-- API documentada con Swagger.
+- Implement user authentication and role management.
+- Manage products, categories, and inventory movements.
+- Register sales with automatic inventory updates.
+- Generate low-stock alerts.
+- Build dashboards and operational reports.
+- Integrate external APIs to provide real-world functionality.
+- Produce comprehensive technical documentation, including architecture and database design.
+- Prepare the application for a future migration to a microservices architecture.
 
-## 6. Alcance futuro
+---
 
-En fases posteriores se contempla:
+## 5. Initial Scope (Version 1.0)
 
-- Microservicio de notificaciones.
-- Microservicio de reportes.
-- Integración con API externa de tasa de cambio.
-- Exportación de reportes en PDF/Excel.
-- CI/CD con GitHub Actions.
-- Despliegue en la nube.
-- Integración básica de inteligencia para sugerencias de compra.
+The first release of StockWise will include:
+
+- User authentication.
+- Product management.
+- Category management.
+- Inventory entry and stock adjustment.
+- Sales registration.
+- Low-stock alerts.
+- Basic dashboard.
+- REST API documentation using Swagger.
+
+---
+
+## 6. Future Scope
+
+Future releases may include:
+
+- Notification Microservice.
+- Reporting Microservice.
+- Exchange rate API integration.
+- PDF and Excel report generation.
+- CI/CD pipeline using GitHub Actions.
+- Cloud deployment.
+- AI-powered inventory recommendations.

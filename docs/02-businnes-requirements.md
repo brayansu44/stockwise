@@ -1,75 +1,98 @@
 # StockWise - Business Requirements
 
-## 1. Contexto del negocio
+## 1. Business Context
 
-StockWise está orientado a pequeñas y medianas empresas que necesitan controlar su inventario, registrar ventas y obtener información básica para la toma de decisiones.
+StockWise is designed for small and medium-sized businesses (SMBs) that need a centralized platform to manage inventory, sales, and operational information.
 
-El sistema busca apoyar negocios que actualmente gestionan sus productos mediante hojas de cálculo, registros manuales o herramientas poco integradas.
+Many of these businesses still rely on spreadsheets or manual processes to control stock, making it difficult to maintain accurate inventory records and obtain reliable business insights.
 
-## 2. Problema principal
+StockWise aims to provide a modern, web-based solution that improves operational efficiency, inventory control, and business visibility.
 
-Los negocios pequeños suelen presentar dificultades para mantener actualizado su inventario, conocer productos con bajo stock, registrar movimientos de entrada y salida, y consultar reportes claros sobre sus ventas.
+---
 
-Esto puede generar pérdida de información, errores operativos, sobrecostos, agotamiento de productos y baja trazabilidad.
+## 2. Business Problem
 
-## 3. Usuarios del sistema
+Small businesses often struggle with inventory management due to manual processes, disconnected tools, and limited operational visibility.
 
-### Administrador
+These challenges frequently result in:
 
-Usuario encargado de configurar el sistema, gestionar usuarios, productos, categorías, inventario y consultar reportes generales.
+- Inventory inaccuracies.
+- Stock shortages.
+- Duplicate or inconsistent information.
+- Operational inefficiencies.
+- Limited reporting capabilities.
+- Poor traceability of inventory movements and sales.
 
-### Vendedor
+---
 
-Usuario encargado de registrar ventas y consultar productos disponibles.
+## 3. Stakeholders
 
-### Operador de inventario
+### System Administrator
 
-Usuario encargado de registrar entradas, salidas y ajustes de inventario.
+Responsible for configuring the platform, managing users, products, categories, inventory, and accessing business reports.
 
-## 4. Necesidades principales
+### Sales Representative
 
-- Gestionar productos y categorías.
-- Registrar entradas y salidas de inventario.
-- Registrar ventas.
-- Actualizar stock automáticamente.
-- Generar alertas de stock bajo.
-- Consultar reportes operativos.
-- Controlar acceso mediante roles.
-- Mantener trazabilidad básica de las operaciones.
+Responsible for registering sales and consulting product availability.
 
-## 5. Reglas de negocio iniciales
+### Inventory Operator
 
-- Un producto debe pertenecer a una categoría.
-- Un producto debe tener un stock mínimo definido.
-- No se puede registrar una venta si no hay stock suficiente.
-- Cada venta debe descontar automáticamente el stock.
-- Cada entrada de inventario debe aumentar el stock.
-- El sistema debe generar una alerta cuando el stock actual sea menor o igual al stock mínimo.
-- Solo el administrador puede gestionar usuarios.
-- Solo usuarios autenticados pueden acceder al sistema.
+Responsible for recording inventory entries, stock adjustments, and inventory movements.
 
-## 6. Alcance de la versión 1.0
+---
 
-La versión 1.0 incluirá:
+## 4. Business Needs
 
-- Autenticación de usuarios.
-- Gestión de roles básicos.
-- Gestión de categorías.
-- Gestión de productos.
-- Registro de entradas de inventario.
-- Registro de ventas.
-- Alertas de stock bajo.
-- Dashboard inicial.
-- API documentada con Swagger.
+The platform must allow users to:
 
-## 7. Fuera del alcance de la versión 1.0
+- Manage products and categories.
+- Register inventory entries and stock adjustments.
+- Record sales transactions.
+- Automatically update inventory levels.
+- Generate low-stock alerts.
+- Access operational reports.
+- Control system access through user roles.
+- Maintain complete traceability of inventory operations.
 
-No se incluirá inicialmente:
+---
 
-- Facturación electrónica real.
-- Pasarela de pagos real.
-- Integración contable.
-- Múltiples sedes.
-- Aplicación móvil.
-- Inteligencia artificial avanzada.
-- Microservicios completos desde el inicio.
+## 5. Business Rules
+
+- Every product must belong to a category.
+- Every product must define a minimum stock level.
+- A sale cannot be completed if there is insufficient stock.
+- Every completed sale must automatically decrease the available inventory.
+- Every inventory entry must increase the available stock.
+- The system must generate a low-stock alert whenever the current stock is less than or equal to the minimum stock.
+- Only administrators are allowed to manage users.
+- Only authenticated users may access the platform.
+
+---
+
+## 6. Version 1.0 Scope
+
+The first version of StockWise will include:
+
+- User authentication.
+- Role-based access control.
+- Category management.
+- Product management.
+- Inventory entry management.
+- Sales registration.
+- Low-stock alerts.
+- Operational dashboard.
+- REST API documentation using Swagger.
+
+---
+
+## 7. Out of Scope (Version 1.0)
+
+The following features are intentionally excluded from the first release:
+
+- Electronic invoicing integration.
+- Payment gateway integration.
+- Accounting system integration.
+- Multi-warehouse or multi-branch support.
+- Mobile application.
+- Advanced Artificial Intelligence features.
+- Full microservices architecture.
