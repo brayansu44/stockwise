@@ -1,9 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.application.dto.product_dto import CreateProductRequest, ProductResponse
 from app.application.use_cases.create_product import CreateProductUseCase
 from app.domain.entities.product import Product
-from app.infrastructure.repositories.in_memory_product_repository import InMemoryProductRepository
+from app.presentation.dependencies.product_dependencies import get_create_product_use_case
 
 
 router = APIRouter(
@@ -11,11 +11,12 @@ router = APIRouter(
     tags=["Products"]
 )
 
-product_repository = InMemoryProductRepository()
-
 
 @router.post("/", response_model=ProductResponse, status_code=201)
-def create_product(request: CreateProductRequest):
+def create_product(
+    request: CreateProductRequest,
+    use_case: CreateProductUseCase = Depends(get_create_product_use_case)
+):
     product = Product(
         id=None,
         name=request.name,
@@ -25,8 +26,6 @@ def create_product(request: CreateProductRequest):
         current_stock=request.current_stock,
         minimum_stock=request.minimum_stock
     )
-
-    use_case = CreateProductUseCase(product_repository)
 
     try:
         return use_case.execute(product)
