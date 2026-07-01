@@ -3,7 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.application.dto.product_dto import CreateProductRequest, ProductResponse
 from app.application.use_cases.create_product import CreateProductUseCase
 from app.domain.entities.product import Product
-from app.presentation.dependencies.product_dependencies import get_create_product_use_case
+from app.application.use_cases.list_products import ListProductsUseCase
+from app.presentation.dependencies.product_dependencies import (
+    get_create_product_use_case,
+    get_list_products_use_case,
+)
 
 
 router = APIRouter(
@@ -31,3 +35,9 @@ def create_product(
         return use_case.execute(product)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
+    
+@router.get("/", response_model=list[ProductResponse])
+def list_products(
+    use_case: ListProductsUseCase = Depends(get_list_products_use_case)
+):
+    return use_case.execute()

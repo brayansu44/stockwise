@@ -11,3 +11,7 @@ class ProductRepository(ABC):
     @abstractmethod
     def get_by_code(self, code: str) -> Product | None:
         pass
+
+    @abstractmethod
+    def list_all(self) -> list[Product]:
+        pass

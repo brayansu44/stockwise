@@ -19,3 +19,6 @@ class InMemoryProductRepository(ProductRepository):
                 return product
 
         return None
+    
+    def list_all(self) -> list[Product]:
+        return self.products
