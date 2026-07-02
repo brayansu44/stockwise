@@ -4,9 +4,11 @@ from app.application.dto.product_dto import CreateProductRequest, ProductRespons
 from app.application.use_cases.create_product import CreateProductUseCase
 from app.domain.entities.product import Product
 from app.application.use_cases.list_products import ListProductsUseCase
+from app.application.use_cases.get_product_by_code import GetProductByCodeUseCase
 from app.presentation.dependencies.product_dependencies import (
     get_create_product_use_case,
     get_list_products_use_case,
+    get_product_by_code_use_case
 )
 
 
@@ -41,3 +43,13 @@ def list_products(
     use_case: ListProductsUseCase = Depends(get_list_products_use_case)
 ):
     return use_case.execute()
+
+@router.get("/{code}", response_model=ProductResponse)
+def get_product_by_code(
+    code: str,
+    use_case: GetProductByCodeUseCase = Depends(get_product_by_code_use_case)
+):
+    try:
+        return use_case.execute(code)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error))
