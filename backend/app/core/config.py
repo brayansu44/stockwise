@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "StockWise API"
     PROJECT_VERSION: str = "1.0.0"
     ENVIRONMENT: str = "development"
+    DATABASE_URL: str
 
     class Config:
         env_file = ".env"
