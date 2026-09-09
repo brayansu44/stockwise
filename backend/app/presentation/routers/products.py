@@ -10,6 +10,7 @@ from app.presentation.dependencies.product_dependencies import (
     get_list_products_use_case,
     get_product_by_code_use_case
 )
+from app.application.mappers.product_mapper import ProductMapper
 
 
 router = APIRouter(
@@ -23,18 +24,11 @@ def create_product(
     request: CreateProductRequest,
     use_case: CreateProductUseCase = Depends(get_create_product_use_case)
 ):
-    product = Product(
-        id=None,
-        name=request.name,
-        code=request.code,
-        description=request.description,
-        price=request.price,
-        current_stock=request.current_stock,
-        minimum_stock=request.minimum_stock
-    )
+    product = product = ProductMapper.request_to_entity(request)
 
     try:
-        return use_case.execute(product)
+        created_product = use_case.execute(product)
+        return ProductMapper.entity_to_response(created_product)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
     
@@ -42,7 +36,8 @@ def create_product(
 def list_products(
     use_case: ListProductsUseCase = Depends(get_list_products_use_case)
 ):
-    return use_case.execute()
+    products = use_case.execute()
+    return [ProductMapper.entity_to_response(product) for product in products]
 
 @router.get("/{code}", response_model=ProductResponse)
 def get_product_by_code(
@@ -50,6 +45,7 @@ def get_product_by_code(
     use_case: GetProductByCodeUseCase = Depends(get_product_by_code_use_case)
 ):
     try:
-        return use_case.execute(code)
+        product = use_case.execute(code)
+        return ProductMapper.entity_to_response(product)
     except ValueError as error:
         raise HTTPException(status_code=404, detail=str(error))
