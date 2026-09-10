@@ -19,3 +19,9 @@ class ProductResponse(BaseModel):
     current_stock: int
     minimum_stock: int
     is_active: bool
+    
+class UpdateProductRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=2, max_length=100)
+    description: str | None = None
+    price: float | None = Field(default=None, ge=0)
+    minimum_stock: int | None = Field(default=None, ge=0)

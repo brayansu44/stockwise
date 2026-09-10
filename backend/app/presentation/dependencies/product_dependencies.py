@@ -8,6 +8,10 @@ from app.infrastructure.repositories.postgres_product_repository import (
     PostgresProductRepository,
 )
 from app.presentation.dependencies.database_dependencies import get_db_session
+from app.application.use_cases.update_product import UpdateProductUseCase
+from app.application.use_cases.change_product_status import (
+    ChangeProductStatusUseCase,
+)
 
 
 def get_product_repository(
@@ -32,3 +36,13 @@ def get_product_by_code_use_case(
     product_repository: PostgresProductRepository = Depends(get_product_repository),
 ) -> GetProductByCodeUseCase:
     return GetProductByCodeUseCase(product_repository)
+
+def get_update_product_use_case(
+    product_repository: PostgresProductRepository = Depends(get_product_repository),
+) -> UpdateProductUseCase:
+    return UpdateProductUseCase(product_repository)
+
+def get_change_product_status_use_case(
+    product_repository: PostgresProductRepository = Depends(get_product_repository),
+) -> ChangeProductStatusUseCase:
+    return ChangeProductStatusUseCase(product_repository)

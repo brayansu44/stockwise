@@ -56,3 +56,24 @@ class PostgresProductRepository(ProductRepository):
             minimum_stock=product_model.minimum_stock,
             is_active=product_model.is_active,
         )
+        
+    def update(self, product: Product) -> Product:
+        product_model = (
+            self.db_session.query(ProductModel)
+            .filter(ProductModel.id == product.id)
+            .first()
+        )
+
+        if not product_model:
+            raise ValueError("Product not found")
+
+        product_model.name = product.name
+        product_model.description = product.description
+        product_model.price = Decimal(str(product.price))
+        product_model.minimum_stock = product.minimum_stock
+        product_model.is_active = product.is_active
+
+        self.db_session.commit()
+        self.db_session.refresh(product_model)
+
+        return self._to_entity(product_model)

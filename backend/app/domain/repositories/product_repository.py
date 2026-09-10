@@ -15,3 +15,7 @@ class ProductRepository(ABC):
     @abstractmethod
     def list_all(self) -> list[Product]:
         pass
+    
+    @abstractmethod
+    def update(self, product: Product) -> Product:
+        pass
