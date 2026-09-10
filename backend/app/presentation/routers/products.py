@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.application.dto.product_dto import CreateProductRequest, ProductResponse
 from app.application.use_cases.create_product import CreateProductUseCase
@@ -14,6 +14,8 @@ from app.application.mappers.product_mapper import ProductMapper
 
 from app.domain.entities.user import User
 from app.presentation.dependencies.auth_dependencies import get_current_user
+from app.domain.entities.user_role import UserRole
+from app.presentation.dependencies.role_dependencies import require_roles
 
 
 router = APIRouter(
@@ -21,19 +23,33 @@ router = APIRouter(
     tags=["Products"]
 )
 
-
-@router.post("/", response_model=ProductResponse, status_code=201)
+@router.post(
+    "/",
+    response_model=ProductResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_product(
     request: CreateProductRequest,
-    use_case: CreateProductUseCase = Depends(get_create_product_use_case)
-):
-    product = product = ProductMapper.request_to_entity(request)
-
+    use_case: CreateProductUseCase = Depends(get_create_product_use_case),
+    _current_user=Depends(
+        require_roles(
+            UserRole.ADMIN,
+            UserRole.INVENTORY_OPERATOR,
+        )
+    ),
+) -> ProductResponse:
     try:
+        product = ProductMapper.request_to_entity(request)
+
         created_product = use_case.execute(product)
+
         return ProductMapper.entity_to_response(created_product)
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error))
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
     
 @router.get(
     "/",

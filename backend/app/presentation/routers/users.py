@@ -6,13 +6,14 @@ from app.application.use_cases.create_user import CreateUserUseCase
 from app.presentation.dependencies.user_dependencies import (
     get_create_user_use_case,
 )
+from app.domain.entities.user_role import UserRole
+from app.presentation.dependencies.role_dependencies import require_roles
 
 
 router = APIRouter(
     prefix="/users",
     tags=["Users"],
 )
-
 
 @router.post(
     "/",
@@ -22,6 +23,7 @@ router = APIRouter(
 def create_user(
     request: CreateUserRequest,
     use_case: CreateUserUseCase = Depends(get_create_user_use_case),
+    _current_user=Depends(require_roles(UserRole.ADMIN)),
 ) -> UserResponse:
     try:
         user = UserMapper.request_to_entity(request)

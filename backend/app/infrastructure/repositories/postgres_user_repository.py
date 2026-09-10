@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.domain.entities.user import User
 from app.domain.repositories.user_repository import UserRepository
 from app.infrastructure.database.models.user_model import UserModel
+from app.domain.entities.user_role import UserRole
 
 
 class PostgresUserRepository(UserRepository):
@@ -14,7 +15,7 @@ class PostgresUserRepository(UserRepository):
             name=user.name,
             email=user.email,
             hashed_password=user.hashed_password,
-            role=user.role,
+            role=user.role.value,
             is_active=user.is_active,
         )
 
@@ -54,6 +55,6 @@ class PostgresUserRepository(UserRepository):
             name=user_model.name,
             email=user_model.email,
             hashed_password=user_model.hashed_password,
-            role=user_model.role,
+            role=UserRole(user_model.role),
             is_active=user_model.is_active,
         )

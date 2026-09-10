@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from app.domain.entities.user_role import UserRole
+
 
 @dataclass
 class User:
@@ -7,5 +9,5 @@ class User:
     name: str
     email: str
     hashed_password: str
-    role: str
+    role: UserRole
     is_active: bool = True
