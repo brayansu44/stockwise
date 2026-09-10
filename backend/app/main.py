@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from app.presentation.routers.health import router as health_router
 from app.presentation.routers.products import router as products_router
+from app.presentation.routers import users
 from app.core.config import settings
+from app.presentation.routers import auth
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -12,6 +14,10 @@ app = FastAPI(
 app.include_router(health_router)
 
 app.include_router(products_router)
+
+app.include_router(users.router)
+
+app.include_router(auth.router)
 
 @app.get("/")
 def read_root():
