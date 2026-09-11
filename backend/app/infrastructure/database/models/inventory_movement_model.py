@@ -15,6 +15,12 @@ class InventoryMovementModel(Base):
         ForeignKey("products.id"),
         index=True,
     )
+    
+    sale_id: Mapped[int | None] = mapped_column(
+        ForeignKey("sales.id"),
+        nullable=True,
+        index=True,
+    )
 
     movement_type: Mapped[str] = mapped_column(
         String(20),

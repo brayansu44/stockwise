@@ -18,4 +18,5 @@ class InventoryMovementResponse(BaseModel):
     movement_type: MovementType
     quantity: int
     reason: str | None
+    sale_id: int | None
     created_at: datetime | None

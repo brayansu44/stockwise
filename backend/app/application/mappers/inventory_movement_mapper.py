@@ -15,5 +15,6 @@ class InventoryMovementMapper:
             movement_type=movement.movement_type,
             quantity=movement.quantity,
             reason=movement.reason,
+            sale_id=movement.sale_id,
             created_at=movement.created_at,
         )

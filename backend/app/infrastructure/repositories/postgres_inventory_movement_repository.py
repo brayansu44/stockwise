@@ -22,6 +22,7 @@ class PostgresInventoryMovementRepository(InventoryMovementRepository):
         try:
             movement_model = InventoryMovementModel(
                 product_id=movement.product_id,
+                sale_id=movement.sale_id,
                 movement_type=movement.movement_type.value,
                 quantity=movement.quantity,
                 reason=movement.reason,
@@ -63,5 +64,26 @@ class PostgresInventoryMovementRepository(InventoryMovementRepository):
             movement_type=MovementType(movement_model.movement_type),
             quantity=movement_model.quantity,
             reason=movement_model.reason,
+            sale_id=movement_model.sale_id,
             created_at=movement_model.created_at,
         )
+        
+    def create_without_commit(
+        self,
+        movement: InventoryMovement,
+    ) -> InventoryMovement:
+        movement_model = InventoryMovementModel(
+            product_id=movement.product_id,
+            sale_id=movement.sale_id,
+            movement_type=movement.movement_type.value,
+            quantity=movement.quantity,
+            reason=movement.reason,
+        )
+
+        self.db_session.add(movement_model)
+        self.db_session.flush()
+
+        movement.id = movement_model.id
+        movement.created_at = movement_model.created_at
+
+        return movement

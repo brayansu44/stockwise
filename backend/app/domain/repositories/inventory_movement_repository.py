@@ -10,6 +10,13 @@ class InventoryMovementRepository(ABC):
         movement: InventoryMovement,
     ) -> InventoryMovement:
         pass
+    
+    @abstractmethod
+    def create_without_commit(
+        self,
+        movement: InventoryMovement,
+    ) -> InventoryMovement:
+        pass
 
     @abstractmethod
     def list_by_product(
