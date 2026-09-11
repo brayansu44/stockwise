@@ -4,6 +4,9 @@ from app.presentation.routers.products import router as products_router
 from app.presentation.routers import users
 from app.core.config import settings
 from app.presentation.routers import auth
+from app.presentation.routers.inventory_movements import (
+    router as inventory_movements_router,
+)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -18,6 +21,8 @@ app.include_router(products_router)
 app.include_router(users.router)
 
 app.include_router(auth.router)
+
+app.include_router(inventory_movements_router)
 
 @app.get("/")
 def read_root():

@@ -9,6 +9,9 @@ from app.core.config import settings
 from app.infrastructure.database.database import Base
 from app.infrastructure.database.models.product_model import ProductModel
 from app.infrastructure.database.models.user_model import UserModel
+from app.infrastructure.database.models.inventory_movement_model import (
+    InventoryMovementModel,
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

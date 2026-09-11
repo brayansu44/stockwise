@@ -19,3 +19,10 @@ class ProductRepository(ABC):
     @abstractmethod
     def update(self, product: Product) -> Product:
         pass
+    
+    @abstractmethod
+    def update_without_commit(
+        self,
+        product: Product,
+    ) -> Product:
+        pass
