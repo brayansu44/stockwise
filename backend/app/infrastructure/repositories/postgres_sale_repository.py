@@ -153,3 +153,22 @@ class PostgresSaleRepository(SaleRepository):
         except Exception:
             self.db_session.rollback()
             raise
+        
+    def update_without_commit(
+        self,
+        sale: Sale,
+    ) -> Sale:
+        sale_model = (
+            self.db_session.query(SaleModel)
+            .filter(SaleModel.id == sale.id)
+            .first()
+        )
+
+        if not sale_model:
+            raise ValueError("Sale not found")
+
+        sale_model.status = sale.status.value
+
+        self.db_session.flush()
+
+        return sale

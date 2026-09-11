@@ -32,3 +32,10 @@ class SaleRepository(ABC):
     @abstractmethod
     def commit(self) -> None:
         pass
+    
+    @abstractmethod
+    def update_without_commit(
+        self,
+        sale: Sale,
+    ) -> Sale:
+        pass

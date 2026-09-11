@@ -102,3 +102,18 @@ class PostgresProductRepository(ProductRepository):
         self.db_session.flush()
 
         return self._to_entity(product_model)
+    
+    def get_by_id(
+        self,
+        product_id: int,
+    ) -> Product | None:
+        product_model = (
+            self.db_session.query(ProductModel)
+            .filter(ProductModel.id == product_id)
+            .first()
+        )
+
+        if not product_model:
+            return None
+
+        return self._to_entity(product_model)

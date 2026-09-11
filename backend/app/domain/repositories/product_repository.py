@@ -26,3 +26,10 @@ class ProductRepository(ABC):
         product: Product,
     ) -> Product:
         pass
+    
+    @abstractmethod
+    def get_by_id(
+        self,
+        product_id: int,
+    ) -> Product | None:
+        pass

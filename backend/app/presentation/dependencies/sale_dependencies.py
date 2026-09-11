@@ -16,6 +16,7 @@ from app.application.use_cases.list_sales import ListSalesUseCase
 from app.presentation.dependencies.inventory_movement_dependencies import (
     get_inventory_movement_repository,
 )
+from app.application.use_cases.cancel_sale import CancelSaleUseCase
 
 
 def get_sale_repository(
@@ -52,3 +53,18 @@ def get_list_sales_use_case(
     ),
 ) -> ListSalesUseCase:
     return ListSalesUseCase(sale_repository)
+
+def get_cancel_sale_use_case(
+    sale_repository: PostgresSaleRepository = Depends(
+        get_sale_repository
+    ),
+    product_repository=Depends(get_product_repository),
+    inventory_movement_repository=Depends(
+        get_inventory_movement_repository
+    ),
+) -> CancelSaleUseCase:
+    return CancelSaleUseCase(
+        sale_repository=sale_repository,
+        product_repository=product_repository,
+        inventory_movement_repository=inventory_movement_repository,
+    )

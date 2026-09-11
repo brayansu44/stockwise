@@ -10,11 +10,13 @@ from app.domain.entities.user import User
 from app.domain.entities.user_role import UserRole
 from app.application.use_cases.get_sale_by_id import GetSaleByIdUseCase
 from app.application.use_cases.list_sales import ListSalesUseCase
+from app.application.use_cases.cancel_sale import CancelSaleUseCase
 from app.presentation.dependencies.role_dependencies import require_roles
 from app.presentation.dependencies.sale_dependencies import (
     get_create_sale_use_case,
     get_list_sales_use_case,
     get_sale_by_id_use_case,
+    get_cancel_sale_use_case,
 )
 
 
@@ -99,5 +101,27 @@ def get_sale_by_id(
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+        
+@router.patch(
+    "/{sale_id}/cancel",
+    response_model=SaleResponse,
+)
+def cancel_sale(
+    sale_id: int,
+    use_case: CancelSaleUseCase = Depends(get_cancel_sale_use_case),
+    current_user: User = Depends(
+        require_roles(UserRole.ADMIN)
+    ),
+) -> SaleResponse:
+    try:
+        sale = use_case.execute(sale_id)
+
+        return SaleMapper.entity_to_response(sale)
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
         ) from exc
