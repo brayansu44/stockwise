@@ -8,6 +8,7 @@ from app.domain.entities.movement_type import MovementType
 from app.domain.repositories.inventory_movement_repository import (
     InventoryMovementRepository,
 )
+from app.domain.entities.product import Product
 
 
 class CreateSaleUseCase:
@@ -33,7 +34,7 @@ class CreateSaleUseCase:
             raise ValueError("Sale must contain at least one item")
 
         sale_items: list[SaleItem] = []
-        products_to_update = []
+        products_to_update: list[tuple[Product, int]] = []
         product_codes: set[str] = set()
 
         for item in items:
@@ -45,6 +46,9 @@ class CreateSaleUseCase:
                 )
 
             product_codes.add(product_code)
+
+        for item in items:
+            product_code = item.product_code.strip()
 
             product = self.product_repository.get_by_code(product_code)
 
@@ -63,7 +67,8 @@ class CreateSaleUseCase:
                     f"Product ID is missing: {product_code}"
                 )
 
-            product.decrease_stock(item.quantity)
+            if item.quantity > product.current_stock:
+                raise ValueError("Insufficient stock")
 
             sale_item = SaleItem(
                 product_id=product.id,
@@ -74,7 +79,9 @@ class CreateSaleUseCase:
             sale_item.validate()
 
             sale_items.append(sale_item)
-            products_to_update.append(product)
+            products_to_update.append(
+                (product, item.quantity)
+            )
 
         sale = Sale(
             id=None,
@@ -83,7 +90,8 @@ class CreateSaleUseCase:
         )
         sale.validate()
 
-        for product in products_to_update:
+        for product, quantity in products_to_update:
+            product.decrease_stock(quantity)
             self.product_repository.update_without_commit(product)
 
         sale = self.sale_repository.create_without_commit(sale)
