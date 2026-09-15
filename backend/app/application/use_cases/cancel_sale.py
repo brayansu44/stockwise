@@ -7,6 +7,7 @@ from app.domain.repositories.inventory_movement_repository import (
 )
 from app.domain.repositories.product_repository import ProductRepository
 from app.domain.repositories.sale_repository import SaleRepository
+from app.domain.entities.product import Product
 
 
 class CancelSaleUseCase:
@@ -32,6 +33,9 @@ class CancelSaleUseCase:
         if sale.status == SaleStatus.CANCELLED:
             raise ValueError("Sale is already cancelled")
 
+        products_to_restore: list[tuple[Product, int]] = []
+
+        # Validate all products before modifying stock
         for item in sale.items:
             product = self.product_repository.get_by_id(item.product_id)
 
@@ -40,15 +44,18 @@ class CancelSaleUseCase:
                     f"Product not found for sale item: {item.product_id}"
                 )
 
-            product.increase_stock(item.quantity)
+            products_to_restore.append((product, item.quantity))
 
+        # Restore stock only after all products have been validated
+        for product, quantity in products_to_restore:
+            product.increase_stock(quantity)
             self.product_repository.update_without_commit(product)
 
             movement = InventoryMovement(
                 id=None,
-                product_id=item.product_id,
+                product_id=product.id,
                 movement_type=MovementType.ENTRY,
-                quantity=item.quantity,
+                quantity=quantity,
                 reason=f"Sale cancellation #{sale.id}",
                 sale_id=sale.id,
             )
