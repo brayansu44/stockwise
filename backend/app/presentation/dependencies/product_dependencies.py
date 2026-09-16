@@ -12,7 +12,9 @@ from app.application.use_cases.update_product import UpdateProductUseCase
 from app.application.use_cases.change_product_status import (
     ChangeProductStatusUseCase,
 )
-
+from app.application.use_cases.list_low_stock_products import (
+    ListLowStockProductsUseCase,
+)
 
 def get_product_repository(
     db_session: Session = Depends(get_db_session),
@@ -46,3 +48,12 @@ def get_change_product_status_use_case(
     product_repository: PostgresProductRepository = Depends(get_product_repository),
 ) -> ChangeProductStatusUseCase:
     return ChangeProductStatusUseCase(product_repository)
+
+def get_list_low_stock_products_use_case(
+    product_repository: PostgresProductRepository = Depends(
+        get_product_repository
+    ),
+) -> ListLowStockProductsUseCase:
+    return ListLowStockProductsUseCase(
+        product_repository=product_repository,
+    )

@@ -9,12 +9,16 @@ from app.application.use_cases.change_product_status import (
 from app.domain.entities.product import Product
 from app.application.use_cases.list_products import ListProductsUseCase
 from app.application.use_cases.get_product_by_code import GetProductByCodeUseCase
+from app.application.use_cases.list_low_stock_products import (
+    ListLowStockProductsUseCase,
+)
 from app.presentation.dependencies.product_dependencies import (
     get_create_product_use_case,
     get_list_products_use_case,
     get_product_by_code_use_case,
     get_update_product_use_case,
     get_change_product_status_use_case,
+    get_list_low_stock_products_use_case,
 )
 from app.application.mappers.product_mapper import ProductMapper
 
@@ -63,6 +67,23 @@ def create_product(
 )
 def list_products(
     use_case: ListProductsUseCase = Depends(get_list_products_use_case),
+    current_user: User = Depends(get_current_user),
+) -> list[ProductResponse]:
+    products = use_case.execute()
+
+    return [
+        ProductMapper.entity_to_response(product)
+        for product in products
+    ]
+
+@router.get(
+    "/low-stock",
+    response_model=list[ProductResponse],
+)
+def list_low_stock_products(
+    use_case: ListLowStockProductsUseCase = Depends(
+        get_list_low_stock_products_use_case
+    ),
     current_user: User = Depends(get_current_user),
 ) -> list[ProductResponse]:
     products = use_case.execute()
