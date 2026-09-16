@@ -4,16 +4,18 @@ from app.domain.repositories.inventory_movement_repository import (
     InventoryMovementRepository,
 )
 from app.domain.repositories.product_repository import ProductRepository
-
+from app.domain.unit_of_work import UnitOfWork
 
 class CreateInventoryMovementUseCase:
     def __init__(
         self,
         inventory_movement_repository: InventoryMovementRepository,
         product_repository: ProductRepository,
+        unit_of_work: UnitOfWork,
     ):
         self.inventory_movement_repository = inventory_movement_repository
         self.product_repository = product_repository
+        self.unit_of_work = unit_of_work
 
     def execute(
         self,
@@ -42,16 +44,29 @@ class CreateInventoryMovementUseCase:
 
             product.current_stock = quantity
 
-        updated_product = self.product_repository.update_without_commit(product)
+        try:
+            updated_product = self.product_repository.update_without_commit(product)
 
-        movement = InventoryMovement(
-            id=None,
-            product_id=updated_product.id,
-            movement_type=movement_type,
-            quantity=quantity,
-            reason=reason,
-        )
+            movement = InventoryMovement(
+                id=None,
+                product_id=updated_product.id,
+                movement_type=movement_type,
+                quantity=quantity,
+                reason=reason,
+            )
 
-        movement.validate()
+            movement.validate()
 
-        return self.inventory_movement_repository.create(movement)
+            created_movement = (
+                self.inventory_movement_repository.create_without_commit(
+                    movement
+                )
+            )
+
+            self.unit_of_work.commit()
+
+            return created_movement
+
+        except Exception:
+            self.unit_of_work.rollback()
+            raise
