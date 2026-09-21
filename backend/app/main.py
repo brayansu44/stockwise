@@ -8,6 +8,7 @@ from app.presentation.routers.inventory_movements import (
     router as inventory_movements_router,
 )
 from app.presentation.routers.sales import router as sales_router
+from app.presentation.routers.dashboard import router as dashboard_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -26,6 +27,8 @@ app.include_router(auth.router)
 app.include_router(inventory_movements_router)
 
 app.include_router(sales_router)
+
+app.include_router(dashboard_router)
 
 @app.get("/")
 def read_root():
