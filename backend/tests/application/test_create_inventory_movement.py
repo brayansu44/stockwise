@@ -39,6 +39,7 @@ def test_create_inventory_entry_successfully():
         price=250000,
         current_stock=10,
         minimum_stock=3,
+        category_id=1,
     )
 
     product_repository = FakeProductRepository(products=[product])
@@ -81,6 +82,7 @@ def test_create_inventory_exit_successfully():
         price=250000,
         current_stock=10,
         minimum_stock=3,
+        category_id=1,
     )
 
     product_repository = FakeProductRepository(products=[product])
@@ -120,6 +122,7 @@ def test_create_inventory_adjustment_successfully():
         price=250000,
         current_stock=10,
         minimum_stock=3,
+        category_id=1,
     )
 
     product_repository = FakeProductRepository(products=[product])
@@ -182,6 +185,7 @@ def test_create_inventory_movement_with_inactive_product():
         current_stock=10,
         minimum_stock=3,
         is_active=False,
+        category_id=1,
     )
 
     product_repository = FakeProductRepository(products=[product])
@@ -215,6 +219,7 @@ def test_create_inventory_exit_with_insufficient_stock():
         price=250000,
         current_stock=10,
         minimum_stock=3,
+        category_id=1,
     )
 
     product_repository = FakeProductRepository(products=[product])
@@ -248,6 +253,7 @@ def test_create_inventory_adjustment_with_negative_stock():
         price=250000,
         current_stock=10,
         minimum_stock=3,
+        category_id=1,
     )
 
     product_repository = FakeProductRepository(products=[product])
@@ -284,6 +290,7 @@ def test_inventory_stock_is_not_left_modified_when_movement_creation_fails():
         price=250000,
         current_stock=10,
         minimum_stock=3,
+        category_id=1,
     )
 
     product_repository = FakeProductRepository(products=[product])

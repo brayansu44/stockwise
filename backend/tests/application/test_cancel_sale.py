@@ -21,6 +21,7 @@ def test_cancel_sale_successfully():
         price=250000,
         current_stock=8,
         minimum_stock=3,
+        category_id=1,
     )
 
     sale = Sale(
@@ -73,6 +74,7 @@ def test_cancel_sale_already_cancelled():
         price=250000,
         current_stock=10,
         minimum_stock=3,
+        category_id=1,
     )
 
     sale = Sale(
@@ -136,6 +138,7 @@ def test_cancel_sale_does_not_modify_stock_when_second_product_is_not_found():
         price=250000,
         current_stock=8,
         minimum_stock=3,
+        category_id=1,
     )
 
     sale = Sale(
@@ -208,6 +211,7 @@ def test_cancel_sale_with_multiple_products():
         price=250000,
         current_stock=8,
         minimum_stock=3,
+        category_id=1,
     )
 
     hub = Product(
@@ -218,6 +222,7 @@ def test_cancel_sale_with_multiple_products():
         price=180000,
         current_stock=1,
         minimum_stock=1,
+        category_id=1,
     )
 
     sale = Sale(

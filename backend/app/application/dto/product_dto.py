@@ -8,6 +8,7 @@ class CreateProductRequest(BaseModel):
     price: float = Field(..., ge=0)
     current_stock: int = Field(..., ge=0)
     minimum_stock: int = Field(..., ge=0)
+    category_id: int = Field(..., gt=0)
 
 
 class ProductResponse(BaseModel):
@@ -18,10 +19,13 @@ class ProductResponse(BaseModel):
     price: float
     current_stock: int
     minimum_stock: int
+    category_id: int
     is_active: bool
-    
+
+
 class UpdateProductRequest(BaseModel):
     name: str | None = Field(default=None, min_length=2, max_length=100)
     description: str | None = None
     price: float | None = Field(default=None, ge=0)
     minimum_stock: int | None = Field(default=None, ge=0)
+    category_id: int | None = Field(default=None, gt=0)

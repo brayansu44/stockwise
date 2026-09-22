@@ -115,6 +115,7 @@ def product_repository() -> FakeProductRepository:
         price=250000,
         current_stock=10,
         minimum_stock=3,
+        category_id=1,
     )
 
     hub = Product(
@@ -125,6 +126,7 @@ def product_repository() -> FakeProductRepository:
         price=180000,
         current_stock=2,
         minimum_stock=1,
+        category_id=1,
     )
 
     return FakeProductRepository(

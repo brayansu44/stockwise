@@ -15,6 +15,12 @@ from app.application.use_cases.change_product_status import (
 from app.application.use_cases.list_low_stock_products import (
     ListLowStockProductsUseCase,
 )
+from app.infrastructure.repositories.postgres_category_repository import (
+    PostgresCategoryRepository,
+)
+from app.presentation.dependencies.category_dependencies import (
+    get_category_repository,
+)
 
 def get_product_repository(
     db_session: Session = Depends(get_db_session),
@@ -23,9 +29,17 @@ def get_product_repository(
 
 
 def get_create_product_use_case(
-    product_repository: PostgresProductRepository = Depends(get_product_repository),
+    product_repository: PostgresProductRepository = Depends(
+        get_product_repository
+    ),
+    category_repository: PostgresCategoryRepository = Depends(
+        get_category_repository
+    ),
 ) -> CreateProductUseCase:
-    return CreateProductUseCase(product_repository)
+    return CreateProductUseCase(
+        product_repository,
+        category_repository,
+    )
 
 
 def get_list_products_use_case(
@@ -40,9 +54,17 @@ def get_product_by_code_use_case(
     return GetProductByCodeUseCase(product_repository)
 
 def get_update_product_use_case(
-    product_repository: PostgresProductRepository = Depends(get_product_repository),
+    product_repository: PostgresProductRepository = Depends(
+        get_product_repository
+    ),
+    category_repository: PostgresCategoryRepository = Depends(
+        get_category_repository
+    ),
 ) -> UpdateProductUseCase:
-    return UpdateProductUseCase(product_repository)
+    return UpdateProductUseCase(
+        product_repository,
+        category_repository,
+    )
 
 def get_change_product_status_use_case(
     product_repository: PostgresProductRepository = Depends(get_product_repository),

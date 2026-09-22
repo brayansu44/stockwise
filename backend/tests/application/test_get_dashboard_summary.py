@@ -20,6 +20,7 @@ def test_dashboard_counts_only_active_products():
             price=250000,
             current_stock=10,
             minimum_stock=3,
+            category_id=1,
             is_active=True,
         ),
         Product(
@@ -30,6 +31,7 @@ def test_dashboard_counts_only_active_products():
             price=135000,
             current_stock=5,
             minimum_stock=2,
+            category_id=1,
             is_active=True,
         ),
         Product(
@@ -40,6 +42,7 @@ def test_dashboard_counts_only_active_products():
             price=100000,
             current_stock=1,
             minimum_stock=3,
+            category_id=1,
             is_active=False,
         ),
     ]
@@ -66,6 +69,7 @@ def test_dashboard_counts_only_active_low_stock_products():
             price=250000,
             current_stock=3,
             minimum_stock=3,
+            category_id=1,
             is_active=True,
         ),
         Product(
@@ -76,6 +80,7 @@ def test_dashboard_counts_only_active_low_stock_products():
             price=135000,
             current_stock=10,
             minimum_stock=4,
+            category_id=1,
             is_active=True,
         ),
         Product(
@@ -86,6 +91,7 @@ def test_dashboard_counts_only_active_low_stock_products():
             price=100000,
             current_stock=1,
             minimum_stock=3,
+            category_id=1,
             is_active=False,
         ),
     ]

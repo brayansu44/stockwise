@@ -15,6 +15,7 @@ def test_list_low_stock_products_successfully():
             price=250000,
             current_stock=3,
             minimum_stock=3,
+            category_id=1,
         ),
         Product(
             id=2,
@@ -24,6 +25,7 @@ def test_list_low_stock_products_successfully():
             price=135000,
             current_stock=10,
             minimum_stock=4,
+            category_id=1,
         ),
     ]
 
@@ -50,6 +52,7 @@ def test_list_low_stock_products_returns_empty_list_when_none_are_low():
             price=250000,
             current_stock=10,
             minimum_stock=3,
+            category_id=1,
         ),
         Product(
             id=2,
@@ -59,6 +62,7 @@ def test_list_low_stock_products_returns_empty_list_when_none_are_low():
             price=135000,
             current_stock=8,
             minimum_stock=4,
+            category_id=1,
         ),
     ]
 
@@ -81,6 +85,7 @@ def test_product_at_minimum_stock_is_considered_low_stock():
         price=250000,
         current_stock=3,
         minimum_stock=3,
+        category_id=1,
     )
 
     product_repository = FakeProductRepository(products=[product])
@@ -103,6 +108,7 @@ def test_inactive_product_is_not_included_in_low_stock_products():
         price=200000,
         current_stock=1,
         minimum_stock=3,
+        category_id=1,
         is_active=False,
     )
 

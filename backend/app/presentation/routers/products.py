@@ -126,6 +126,7 @@ def update_product(
             description=request.description,
             price=request.price,
             minimum_stock=request.minimum_stock,
+            category_id=request.category_id,
         )
 
         return ProductMapper.entity_to_response(updated_product)

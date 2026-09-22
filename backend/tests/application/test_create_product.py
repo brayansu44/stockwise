@@ -3,7 +3,8 @@ import pytest
 from app.application.use_cases.create_product import CreateProductUseCase
 from app.domain.entities.product import Product
 from app.domain.repositories.product_repository import ProductRepository
-
+from app.domain.entities.category import Category
+from app.domain.repositories.category_repository import CategoryRepository
 
 class FakeProductRepository(ProductRepository):
     def __init__(self):
@@ -37,20 +38,66 @@ class FakeProductRepository(ProductRepository):
     def update_without_commit(self, product: Product) -> Product:
         return product
     
+class FakeCategoryRepository(CategoryRepository):
+    def __init__(self):
+        self.categories: list[Category] = []
+
+    def create(self, category: Category) -> Category:
+        category.id = len(self.categories) + 1
+        self.categories.append(category)
+        return category
+
+    def get_by_id(self, category_id: int) -> Category | None:
+        for category in self.categories:
+            if category.id == category_id:
+                return category
+
+        return None
+
+    def get_by_name(self, name: str) -> Category | None:
+        for category in self.categories:
+            if category.name.lower() == name.lower():
+                return category
+
+        return None
+
+    def list_all(self) -> list[Category]:
+        return self.categories
+
+    def update(self, category: Category) -> Category:
+        return category
+    
 @pytest.fixture
 def repository() -> FakeProductRepository:
     return FakeProductRepository()
 
 @pytest.fixture
+def category_repository() -> FakeCategoryRepository:
+    return FakeCategoryRepository()
+
+@pytest.fixture
 def use_case(
     repository: FakeProductRepository,
+    category_repository: FakeCategoryRepository,
 ) -> CreateProductUseCase:
-    return CreateProductUseCase(repository)
+    return CreateProductUseCase(
+        repository,
+        category_repository,
+    )
     
 def test_create_product(
     repository: FakeProductRepository,
+    category_repository: FakeCategoryRepository,
     use_case: CreateProductUseCase,
 ):
+    category = category_repository.create(
+        Category(
+            id=None,
+            name="Peripherals",
+            description="Computer peripherals",
+        )
+    )
+
     product = Product(
         id=None,
         name="Mechanical Keyboard",
@@ -59,6 +106,7 @@ def test_create_product(
         price=250000,
         current_stock=10,
         minimum_stock=3,
+        category_id=category.id,
     )
 
     created_product = use_case.execute(product)
@@ -68,12 +116,22 @@ def test_create_product(
     assert created_product.code == "KB-001"
     assert created_product.price == 250000
     assert created_product.current_stock == 10
+    assert created_product.category_id == category.id
     assert len(repository.products) == 1
     
 def test_create_product_with_duplicate_code(
     repository: FakeProductRepository,
+    category_repository: FakeCategoryRepository,
     use_case: CreateProductUseCase,
 ):
+    category = category_repository.create(
+        Category(
+            id=None,
+            name="Peripherals",
+            description="Computer peripherals",
+        )
+    )
+
     existing_product = Product(
         id=None,
         name="Mechanical Keyboard",
@@ -82,6 +140,7 @@ def test_create_product_with_duplicate_code(
         price=250000,
         current_stock=10,
         minimum_stock=3,
+        category_id=category.id,
     )
 
     use_case.execute(existing_product)
@@ -94,6 +153,7 @@ def test_create_product_with_duplicate_code(
         price=300000,
         current_stock=5,
         minimum_stock=2,
+        category_id=category.id,
     )
 
     with pytest.raises(
@@ -117,6 +177,7 @@ def test_create_product_with_negative_price(
         price=-1,
         current_stock=10,
         minimum_stock=3,
+        category_id=1,
     )
 
     with pytest.raises(
@@ -139,6 +200,7 @@ def test_create_product_with_negative_current_stock(
         price=250000,
         current_stock=-1,
         minimum_stock=3,
+        category_id=1,
     )
 
     with pytest.raises(
@@ -161,6 +223,7 @@ def test_create_product_with_negative_minimum_stock(
         price=250000,
         current_stock=10,
         minimum_stock=-1,
+        category_id=1,
     )
 
     with pytest.raises(
@@ -170,3 +233,93 @@ def test_create_product_with_negative_minimum_stock(
         use_case.execute(product)
 
     assert len(repository.products) == 0
+
+def test_create_product_with_active_category(
+    repository: FakeProductRepository,
+    category_repository: FakeCategoryRepository,
+    use_case: CreateProductUseCase,
+):
+    category = category_repository.create(
+        Category(
+            id=None,
+            name="Peripherals",
+            description="Computer peripherals",
+        )
+    )
+
+    product = Product(
+        id=None,
+        name="Mechanical Keyboard",
+        code="KB-001",
+        description="Mechanical keyboard",
+        price=250000,
+        current_stock=10,
+        minimum_stock=3,
+        category_id=category.id,
+    )
+
+    created_product = use_case.execute(product)
+
+    assert created_product.id == 1
+    assert created_product.category_id == category.id
+    assert len(repository.products) == 1
+
+
+def test_create_product_with_nonexistent_category(
+    repository: FakeProductRepository,
+    use_case: CreateProductUseCase,
+):
+    product = Product(
+        id=None,
+        name="Mechanical Keyboard",
+        code="KB-001",
+        description=None,
+        price=250000,
+        current_stock=10,
+        minimum_stock=3,
+        category_id=999,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Category not found",
+    ):
+        use_case.execute(product)
+
+    assert len(repository.products) == 0
+
+
+def test_create_product_with_inactive_category(
+    repository: FakeProductRepository,
+    category_repository: FakeCategoryRepository,
+    use_case: CreateProductUseCase,
+):
+    category = category_repository.create(
+        Category(
+            id=None,
+            name="Peripherals",
+            description="Computer peripherals",
+            is_active=False,
+        )
+    )
+
+    product = Product(
+        id=None,
+        name="Mechanical Keyboard",
+        code="KB-001",
+        description=None,
+        price=250000,
+        current_stock=10,
+        minimum_stock=3,
+        category_id=category.id,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Category is inactive",
+    ):
+        use_case.execute(product)
+
+    assert len(repository.products) == 0
+
+

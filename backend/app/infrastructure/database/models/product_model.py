@@ -1,9 +1,10 @@
 from decimal import Decimal
 
-from sqlalchemy import Boolean, Numeric, String
+from sqlalchemy import Boolean, ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.infrastructure.database.database import Base
+
 
 class ProductModel(Base):
     __tablename__ = "products"
@@ -15,12 +16,12 @@ class ProductModel(Base):
     code: Mapped[str] = mapped_column(
         String(50),
         unique=True,
-        index=True
+        index=True,
     )
 
     description: Mapped[str | None] = mapped_column(
         String(255),
-        nullable=True
+        nullable=True,
     )
 
     price: Mapped[Decimal] = mapped_column(
@@ -31,7 +32,12 @@ class ProductModel(Base):
 
     minimum_stock: Mapped[int]
 
+    category_id: Mapped[int] = mapped_column(
+        ForeignKey("categories.id"),
+        nullable=False,
+    )
+
     is_active: Mapped[bool] = mapped_column(
         Boolean,
-        default=True
+        default=True,
     )

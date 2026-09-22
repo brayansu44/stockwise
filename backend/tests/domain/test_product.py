@@ -12,6 +12,7 @@ def product() -> Product:
         price=10000,
         current_stock=10,
         minimum_stock=3,
+        category_id=1,
     )
 
 def test_increase_stock(product: Product):

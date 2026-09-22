@@ -10,6 +10,7 @@ class Product:
     price: float
     current_stock: int
     minimum_stock: int
+    category_id: int
     is_active: bool = True
 
     def is_low_stock(self) -> bool:

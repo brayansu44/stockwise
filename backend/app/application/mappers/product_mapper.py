@@ -14,6 +14,7 @@ class ProductMapper:
             price=request.price,
             current_stock=request.current_stock,
             minimum_stock=request.minimum_stock,
+            category_id=request.category_id,
         )
 
     @staticmethod
@@ -26,5 +27,6 @@ class ProductMapper:
             price=product.price,
             current_stock=product.current_stock,
             minimum_stock=product.minimum_stock,
+            category_id=product.category_id,
             is_active=product.is_active,
         )

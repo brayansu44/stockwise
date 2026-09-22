@@ -19,6 +19,7 @@ class PostgresProductRepository(ProductRepository):
             price=Decimal(str(product.price)),
             current_stock=product.current_stock,
             minimum_stock=product.minimum_stock,
+            category_id=product.category_id,
             is_active=product.is_active,
         )
 
@@ -54,6 +55,7 @@ class PostgresProductRepository(ProductRepository):
             price=float(product_model.price),
             current_stock=product_model.current_stock,
             minimum_stock=product_model.minimum_stock,
+            category_id=product_model.category_id,
             is_active=product_model.is_active,
         )
         
@@ -72,6 +74,7 @@ class PostgresProductRepository(ProductRepository):
         product_model.price = Decimal(str(product.price))
         product_model.current_stock = product.current_stock
         product_model.minimum_stock = product.minimum_stock
+        product_model.category_id = product.category_id
         product_model.is_active = product.is_active
 
         self.db_session.commit()
@@ -97,6 +100,7 @@ class PostgresProductRepository(ProductRepository):
         product_model.price = Decimal(str(product.price))
         product_model.current_stock = product.current_stock
         product_model.minimum_stock = product.minimum_stock
+        product_model.category_id = product.category_id
         product_model.is_active = product.is_active
 
         self.db_session.flush()
