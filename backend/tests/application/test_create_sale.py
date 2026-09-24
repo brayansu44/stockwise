@@ -11,7 +11,7 @@ from app.domain.repositories.inventory_movement_repository import (
 )
 from app.application.dto.sale_dto import CreateSaleItemRequest
 from app.domain.entities.movement_type import MovementType
-
+from app.domain.unit_of_work import UnitOfWork
 class FakeProductRepository(ProductRepository):
     def __init__(self, products: list[Product] | None = None):
         self.products = products or []
@@ -105,6 +105,17 @@ class FakeInventoryMovementRepository(InventoryMovementRepository):
             if movement.product_id == product_id
         ]
 
+class FakeUnitOfWork(UnitOfWork):
+    def __init__(self):
+        self.committed = False
+        self.rolled_back = False
+
+    def commit(self) -> None:
+        self.committed = True
+
+    def rollback(self) -> None:
+        self.rolled_back = True
+
 @pytest.fixture
 def product_repository() -> FakeProductRepository:
     keyboard = Product(
@@ -144,15 +155,21 @@ def movement_repository() -> FakeInventoryMovementRepository:
 
 
 @pytest.fixture
+def unit_of_work() -> FakeUnitOfWork:
+    return FakeUnitOfWork()
+
+@pytest.fixture
 def use_case(
     sale_repository: FakeSaleRepository,
     product_repository: FakeProductRepository,
     movement_repository: FakeInventoryMovementRepository,
+    unit_of_work: FakeUnitOfWork,
 ) -> CreateSaleUseCase:
     return CreateSaleUseCase(
         sale_repository=sale_repository,
         product_repository=product_repository,
         inventory_movement_repository=movement_repository,
+        unit_of_work=unit_of_work,
     )
     
 def test_create_sale_successfully(
@@ -160,6 +177,7 @@ def test_create_sale_successfully(
     product_repository: FakeProductRepository,
     sale_repository: FakeSaleRepository,
     movement_repository: FakeInventoryMovementRepository,
+    unit_of_work: FakeUnitOfWork,
 ):
     items = [
         CreateSaleItemRequest(
@@ -194,7 +212,8 @@ def test_create_sale_successfully(
     assert movement.sale_id == 1
     assert movement.reason == "Sale #1"
 
-    assert sale_repository.committed is True
+    assert unit_of_work.committed is True
+    assert unit_of_work.rolled_back is False
     
 def test_create_sale_with_invalid_seller_id(
     use_case: CreateSaleUseCase,
@@ -413,3 +432,34 @@ def test_create_sale_with_insufficient_stock_in_second_product(
     assert len(sale_repository.sales) == 0
     assert len(movement_repository.movements) == 0
     assert sale_repository.committed is False
+
+def test_create_sale_rolls_back_when_movement_fails(
+    use_case: CreateSaleUseCase,
+    unit_of_work: FakeUnitOfWork,
+    movement_repository: FakeInventoryMovementRepository,
+    monkeypatch,
+):
+    items = [
+        CreateSaleItemRequest(
+            product_code="KB-001",
+            quantity=2,
+        )
+    ]
+
+    def simulate_failure(movement):
+        raise RuntimeError("Database error")
+
+    monkeypatch.setattr(
+        movement_repository,
+        "create_without_commit",
+        simulate_failure,
+    )
+
+    with pytest.raises(RuntimeError, match="Database error"):
+        use_case.execute(
+            seller_id=1,
+            items=items,
+        )
+
+    assert unit_of_work.committed is False
+    assert unit_of_work.rolled_back is True

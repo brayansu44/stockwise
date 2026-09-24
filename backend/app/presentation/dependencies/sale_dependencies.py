@@ -17,7 +17,7 @@ from app.presentation.dependencies.inventory_movement_dependencies import (
     get_inventory_movement_repository,
 )
 from app.application.use_cases.cancel_sale import CancelSaleUseCase
-
+from app.infrastructure.unit_of_work import SqlAlchemyUnitOfWork
 
 def get_sale_repository(
     db_session: Session = Depends(get_db_session),
@@ -33,11 +33,16 @@ def get_create_sale_use_case(
     inventory_movement_repository=Depends(
         get_inventory_movement_repository
     ),
+    db_session: Session = Depends(get_db_session),
 ) -> CreateSaleUseCase:
+    
+    unit_of_work = SqlAlchemyUnitOfWork(db_session)
+    
     return CreateSaleUseCase(
         sale_repository=sale_repository,
         product_repository=product_repository,
         inventory_movement_repository=inventory_movement_repository,
+        unit_of_work=unit_of_work,
     )
     
 def get_sale_by_id_use_case(
