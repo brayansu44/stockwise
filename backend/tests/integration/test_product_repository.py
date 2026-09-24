@@ -379,3 +379,43 @@ def test_product_stock_rollback_with_two_connections(
     finally:
         engine.dispose()
 
+def test_update_nonexistent_product(db_session):
+    repository = PostgresProductRepository(db_session)
+
+    product = Product(
+        id=999999,
+        name="Nonexistent Product",
+        code="MISSING-001",
+        description="Product that does not exist",
+        price=25000,
+        current_stock=10,
+        minimum_stock=2,
+        category_id=999999,
+    )
+
+    with pytest.raises(ValueError, match="Product not found"):
+        repository.update(product)
+
+def test_update_without_commit_nonexistent_product(db_session):
+    repository = PostgresProductRepository(db_session)
+
+    product = Product(
+        id=999999,
+        name="Nonexistent Product",
+        code="MISSING-002",
+        description="Product that does not exist",
+        price=25000,
+        current_stock=10,
+        minimum_stock=2,
+        category_id=999999,
+    )
+
+    with pytest.raises(ValueError, match="Product not found"):
+        repository.update_without_commit(product)
+
+def test_get_nonexistent_product_by_id(db_session):
+    repository = PostgresProductRepository(db_session)
+
+    product = repository.get_by_id(999999)
+
+    assert product is None

@@ -222,3 +222,83 @@ def test_update_product_with_inactive_category(
         )
 
     assert product.category_id == 1
+
+def test_update_product_with_empty_name(
+    product_repository: FakeProductRepository,
+    use_case: UpdateProductUseCase,
+):
+    product_repository.create(
+        Product(
+            id=None,
+            name="Mechanical Keyboard",
+            code="KB-005",
+            description="Gaming keyboard",
+            price=250000,
+            current_stock=10,
+            minimum_stock=3,
+            category_id=1,
+        )
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Product name cannot be empty",
+    ):
+        use_case.execute(
+            code="KB-005",
+            name="   ",
+        )
+
+
+def test_update_product_with_negative_price(
+    product_repository: FakeProductRepository,
+    use_case: UpdateProductUseCase,
+):
+    product_repository.create(
+        Product(
+            id=None,
+            name="Mechanical Keyboard",
+            code="KB-006",
+            description="Gaming keyboard",
+            price=250000,
+            current_stock=10,
+            minimum_stock=3,
+            category_id=1,
+        )
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Product price cannot be negative",
+    ):
+        use_case.execute(
+            code="KB-006",
+            price=-1,
+        )
+
+
+def test_update_product_with_negative_minimum_stock(
+    product_repository: FakeProductRepository,
+    use_case: UpdateProductUseCase,
+):
+    product_repository.create(
+        Product(
+            id=None,
+            name="Mechanical Keyboard",
+            code="KB-007",
+            description="Gaming keyboard",
+            price=250000,
+            current_stock=10,
+            minimum_stock=3,
+            category_id=1,
+        )
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Minimum stock cannot be negative",
+    ):
+        use_case.execute(
+            code="KB-007",
+            minimum_stock=-1,
+        )

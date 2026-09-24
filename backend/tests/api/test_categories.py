@@ -504,3 +504,71 @@ def test_update_category_as_seller_forbidden(client, db_session):
 
     assert saved_category.name == "Protected Category"
     assert saved_category.description == "Original description"
+
+def test_create_category_with_duplicate_name(client, db_session):
+    user_repository = PostgresUserRepository(db_session)
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Duplicate Category Admin",
+            email="category.duplicate@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    payload = {
+        "name": "Duplicate Test Category",
+        "description": "Category for duplicate testing",
+    }
+
+    first_response = client.post(
+        "/categories/",
+        json=payload,
+        headers=headers,
+    )
+
+    assert first_response.status_code == 201
+
+    second_response = client.post(
+        "/categories/",
+        json=payload,
+        headers=headers,
+    )
+
+    assert second_response.status_code == 400
+
+def test_activate_nonexistent_category(client, db_session):
+    user_repository = PostgresUserRepository(db_session)
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Missing Category Activation Admin",
+            email="category.missing.activation@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    response = client.patch(
+        "/categories/999999/activate",
+        headers={
+            "Authorization": f"Bearer {token}"
+        },
+    )
+
+    assert response.status_code == 404

@@ -27,6 +27,9 @@ from app.infrastructure.repositories.postgres_inventory_movement_repository impo
 )
 from app.infrastructure.unit_of_work import SqlAlchemyUnitOfWork
 
+from app.application.use_cases.cancel_sale import CancelSaleUseCase
+from app.domain.entities.sale_status import SaleStatus
+
 class FailingInventoryMovementRepository(
     PostgresInventoryMovementRepository
 ):
@@ -182,3 +185,71 @@ def test_sale_transaction_commits_successfully(
     assert len(movements) == 1
     assert movements[0].quantity == 3
     assert movements[0].sale_id == sale.id
+
+def test_cancel_sale_rollback_when_movement_creation_fails(
+    db_session,
+    seller,
+    sale_product,
+):
+    product_repository = PostgresProductRepository(db_session)
+    sale_repository = PostgresSaleRepository(db_session)
+    movement_repository = PostgresInventoryMovementRepository(
+        db_session
+    )
+    unit_of_work = SqlAlchemyUnitOfWork(db_session)
+
+    # Create a valid sale first
+    create_sale_use_case = CreateSaleUseCase(
+        sale_repository=sale_repository,
+        product_repository=product_repository,
+        inventory_movement_repository=movement_repository,
+        unit_of_work=unit_of_work,
+    )
+
+    sale = create_sale_use_case.execute(
+        seller_id=seller.id,
+        items=[
+            CreateSaleItemRequest(
+                product_code=sale_product.code,
+                quantity=3,
+            )
+        ],
+    )
+
+    # Simulate a failure during cancellation
+    failing_movement_repository = (
+        FailingInventoryMovementRepository(db_session)
+    )
+
+    cancel_sale_use_case = CancelSaleUseCase(
+        sale_repository=sale_repository,
+        product_repository=product_repository,
+        inventory_movement_repository=failing_movement_repository,
+        unit_of_work=unit_of_work,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Simulated sale transaction failure",
+    ):
+        cancel_sale_use_case.execute(sale.id)
+
+    # Reload persisted data after rollback
+    db_session.expire_all()
+
+    saved_product = product_repository.get_by_code(
+        sale_product.code
+    )
+    saved_sale = sale_repository.get_by_id(sale.id)
+    movements = movement_repository.list_by_product(
+        sale_product.id
+    )
+
+    assert saved_product is not None
+    assert saved_product.current_stock == 7
+
+    assert saved_sale is not None
+    assert saved_sale.status != SaleStatus.CANCELLED
+
+    # Only the original sale movement should exist
+    assert len(movements) == 1

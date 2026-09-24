@@ -63,13 +63,20 @@ def get_cancel_sale_use_case(
     sale_repository: PostgresSaleRepository = Depends(
         get_sale_repository
     ),
-    product_repository=Depends(get_product_repository),
+    product_repository=Depends(
+        get_product_repository
+    ),
     inventory_movement_repository=Depends(
         get_inventory_movement_repository
     ),
+    db_session: Session = Depends(get_db_session),
 ) -> CancelSaleUseCase:
+
+    unit_of_work = SqlAlchemyUnitOfWork(db_session)
+
     return CancelSaleUseCase(
         sale_repository=sale_repository,
         product_repository=product_repository,
         inventory_movement_repository=inventory_movement_repository,
+        unit_of_work=unit_of_work,
     )

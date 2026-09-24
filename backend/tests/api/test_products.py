@@ -393,3 +393,285 @@ def test_update_product_with_negative_price(client, db_session):
 
     # Assert
     assert response.status_code == 422
+
+def test_list_low_stock_products(client, db_session):
+    category_repository = PostgresCategoryRepository(db_session)
+    product_repository = PostgresProductRepository(db_session)
+    user_repository = PostgresUserRepository(db_session)
+
+    category = category_repository.create(
+        Category(
+            id=None,
+            name="Low Stock Test Category",
+            description="Category for low stock testing",
+        )
+    )
+
+    product_repository.create(
+        Product(
+            id=None,
+            name="Low Stock Keyboard",
+            code="LOW-STOCK-001",
+            description="Product with low stock",
+            price=120000,
+            current_stock=2,
+            minimum_stock=5,
+            category_id=category.id,
+        )
+    )
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Low Stock Admin",
+            email="admin.low.stock@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    response = client.get(
+        "/products/low-stock",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+
+    products = response.json()
+
+    assert any(
+        product["code"] == "LOW-STOCK-001"
+        for product in products
+    )
+
+def test_activate_nonexistent_product(client, db_session):
+    user_repository = PostgresUserRepository(db_session)
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Activation Test Admin",
+            email="admin.activation@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    response = client.patch(
+        "/products/NONEXISTENT-999/activate",
+        headers={
+            "Authorization": f"Bearer {token}"
+        },
+    )
+
+    assert response.status_code == 404
+
+def test_deactivate_nonexistent_product(client, db_session):
+    user_repository = PostgresUserRepository(db_session)
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Deactivation Test Admin",
+            email="admin.deactivation@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    response = client.patch(
+        "/products/NONEXISTENT-999/deactivate",
+        headers={
+            "Authorization": f"Bearer {token}"
+        },
+    )
+
+    assert response.status_code == 404
+
+def test_create_product_with_duplicate_code(client, db_session):
+    category_repository = PostgresCategoryRepository(db_session)
+    user_repository = PostgresUserRepository(db_session)
+
+    category = category_repository.create(
+        Category(
+            id=None,
+            name="Duplicate Product Category",
+            description="Category for duplicate product testing",
+        )
+    )
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Duplicate Product Admin",
+            email="admin.duplicate.product@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    product_data = {
+        "name": "Duplicate Test Product",
+        "code": "DUPLICATE-001",
+        "description": "Product for duplicate testing",
+        "price": 25000,
+        "current_stock": 10,
+        "minimum_stock": 2,
+        "category_id": category.id,
+    }
+
+    first_response = client.post(
+        "/products/",
+        json=product_data,
+        headers=headers,
+    )
+
+    assert first_response.status_code == 201
+
+    second_response = client.post(
+        "/products/",
+        json=product_data,
+        headers=headers,
+    )
+
+    assert second_response.status_code == 400
+    assert second_response.json()["detail"] == (
+        "Product code already exists"
+    )
+
+def test_activate_product_as_admin(client, db_session):
+    category_repository = PostgresCategoryRepository(db_session)
+    product_repository = PostgresProductRepository(db_session)
+    user_repository = PostgresUserRepository(db_session)
+
+    category = category_repository.create(
+        Category(
+            id=None,
+            name="Activation Category",
+            description="Category for activation testing",
+        )
+    )
+
+    product_repository.create(
+        Product(
+            id=None,
+            name="Inactive Product",
+            code="ACTIVATE-001",
+            description="Product to activate",
+            price=25000,
+            current_stock=10,
+            minimum_stock=2,
+            category_id=category.id,
+            is_active=False,
+        )
+    )
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Activation Admin",
+            email="admin.activate.success@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    response = client.patch(
+        "/products/ACTIVATE-001/activate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["is_active"] is True
+
+    db_session.expire_all()
+
+    updated_product = product_repository.get_by_code(
+        "ACTIVATE-001"
+    )
+
+    assert updated_product is not None
+    assert updated_product.is_active is True
+
+def test_deactivate_product_as_admin(client, db_session):
+    category_repository = PostgresCategoryRepository(db_session)
+    product_repository = PostgresProductRepository(db_session)
+    user_repository = PostgresUserRepository(db_session)
+
+    category = category_repository.create(
+        Category(
+            id=None,
+            name="Deactivation Category",
+            description="Category for deactivation testing",
+        )
+    )
+
+    product_repository.create(
+        Product(
+            id=None,
+            name="Active Product",
+            code="DEACTIVATE-001",
+            description="Product to deactivate",
+            price=25000,
+            current_stock=10,
+            minimum_stock=2,
+            category_id=category.id,
+            is_active=True,
+        )
+    )
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Deactivation Admin",
+            email="admin.deactivate.success@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    response = client.patch(
+        "/products/DEACTIVATE-001/deactivate",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["is_active"] is False
+
+    db_session.expire_all()
+
+    updated_product = product_repository.get_by_code(
+        "DEACTIVATE-001"
+    )
+
+    assert updated_product is not None
+    assert updated_product.is_active is False
+

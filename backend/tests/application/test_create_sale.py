@@ -463,3 +463,73 @@ def test_create_sale_rolls_back_when_movement_fails(
 
     assert unit_of_work.committed is False
     assert unit_of_work.rolled_back is True
+
+def test_create_sale_with_product_without_id(
+    use_case: CreateSaleUseCase,
+    product_repository: FakeProductRepository,
+    sale_repository: FakeSaleRepository,
+    movement_repository: FakeInventoryMovementRepository,
+    unit_of_work: FakeUnitOfWork,
+):
+    product = product_repository.get_by_code("KB-001")
+
+    assert product is not None
+    product.id = None
+
+    items = [
+        CreateSaleItemRequest(
+            product_code="KB-001",
+            quantity=2,
+        )
+    ]
+
+    with pytest.raises(
+        ValueError,
+        match="Product ID is missing: KB-001",
+    ):
+        use_case.execute(
+            seller_id=1,
+            items=items,
+        )
+
+    assert product.current_stock == 10
+    assert len(sale_repository.sales) == 0
+    assert len(movement_repository.movements) == 0
+    assert unit_of_work.committed is False
+
+def test_create_sale_without_generated_id(
+    use_case: CreateSaleUseCase,
+    sale_repository: FakeSaleRepository,
+    product_repository: FakeProductRepository,
+    movement_repository: FakeInventoryMovementRepository,
+    unit_of_work: FakeUnitOfWork,
+    monkeypatch,
+):
+    def simulate_missing_sale_id(sale):
+        return sale
+
+    monkeypatch.setattr(
+        sale_repository,
+        "create_without_commit",
+        simulate_missing_sale_id,
+    )
+
+    items = [
+        CreateSaleItemRequest(
+            product_code="KB-001",
+            quantity=2,
+        )
+    ]
+
+    with pytest.raises(
+        ValueError,
+        match="Sale ID was not generated",
+    ):
+        use_case.execute(
+            seller_id=1,
+            items=items,
+        )
+
+    assert unit_of_work.rolled_back is True
+    assert unit_of_work.committed is False
+    assert len(movement_repository.movements) == 0
