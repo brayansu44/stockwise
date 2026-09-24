@@ -1,5 +1,7 @@
 from app.infrastructure.database.database import Base, engine
-from app.infrastructure.database.models.product_model import ProductModel
+
+# Register all SQLAlchemy models
+import app.infrastructure.database.models
 
 
 def init_db() -> None:

@@ -1,3 +1,9 @@
+import os
+from pathlib import Path
+
+from dotenv import dotenv_values
+from sqlalchemy.engine import make_url
+
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -20,9 +26,28 @@ from app.infrastructure.database.models.category_model import CategoryModel
 # access to the values within the .ini file in use.
 config = context.config
 
+database_url = settings.DATABASE_URL
+
+if os.getenv("STOCKWISE_TEST_MODE") == "1":
+    env_path = Path(__file__).resolve().parents[1] / ".env.test"
+
+    if not env_path.is_file():
+        raise RuntimeError("Test environment file not found")
+
+    test_config = dotenv_values(env_path)
+    database_url = test_config.get("DATABASE_URL")
+
+    if not database_url:
+        raise RuntimeError("Test DATABASE_URL is not configured")
+
+    if make_url(database_url).database != "stockwise_test_db":
+        raise RuntimeError(
+            "Unsafe database configuration: expected stockwise_test_db"
+        )
+
 config.set_main_option(
     "sqlalchemy.url",
-    settings.DATABASE_URL
+    database_url.replace("%", "%%"),
 )
 
 # Interpret the config file for Python logging.
