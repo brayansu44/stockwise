@@ -1,15 +1,22 @@
 from pathlib import Path
 
 import pytest
-from dotenv import dotenv_values
-from sqlalchemy.engine import make_url
 
+from dotenv import dotenv_values
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
+
+from app.main import app
+from app.presentation.dependencies.database_dependencies import (
+    get_db_session,
+)
+
 
 @pytest.fixture(scope="session")
 def test_database_url():
-    env_path = Path(__file__).resolve().parents[2] / ".env.test"
+    env_path = Path(__file__).resolve().parents[1] / ".env.test"
 
     if not env_path.is_file():
         raise RuntimeError("Test environment file not found")
@@ -28,6 +35,7 @@ def test_database_url():
         )
 
     return database_url
+
 
 @pytest.fixture
 def db_session(test_database_url):
@@ -49,3 +57,21 @@ def db_session(test_database_url):
         connection.close()
         engine.dispose()
 
+
+@pytest.fixture
+def client(db_session):
+    def override_get_db_session():
+        yield db_session
+
+    app.dependency_overrides[get_db_session] = (
+        override_get_db_session
+    )
+
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        app.dependency_overrides.pop(
+            get_db_session,
+            None,
+        )
