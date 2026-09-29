@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import DashboardLayout from './layouts/DashboardLayout'
 import ProductsPage from './pages/ProductsPage'
+import CategoriesPage from './pages/CategoriesPage'
 
 function App() {
   const { isAuthenticated } = useAuth()
@@ -41,6 +42,7 @@ function App() {
             path="/products"
             element={<ProductsPage />}
           />
+          <Route path="/categories" element={<CategoriesPage />} />
         </Route>
       </Route>
 

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import axios from 'axios'
 import type {
     Product,
@@ -6,6 +6,8 @@ import type {
 } from '../types/product'
 import { useAuth } from '../contexts/AuthContext'
 import { productService } from '../services/productService'
+import { categoryService } from '../services/categoryService'
+import type { Category } from '../types/category'
 
 interface ProductFormProps {
     onProductCreated: () => void
@@ -18,6 +20,32 @@ export default function ProductForm({
 }: ProductFormProps) {
 
     const { token } = useAuth()
+
+    const [categories, setCategories] = useState<Category[]>([])
+
+    useEffect(() => {
+        if (!token) return
+
+        let cancelled = false
+
+        async function loadCategories() {
+            try {
+                const data = await categoryService.getAll(token!)
+
+                if (!cancelled) {
+                    setCategories(data)
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error)
+            }
+        }
+
+        loadCategories()
+
+        return () => {
+            cancelled = true
+        }
+    }, [token])
 
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
@@ -160,7 +188,6 @@ export default function ProductForm({
                     { label: 'Price', field: 'price' },
                     { label: 'Initial Stock', field: 'current_stock' },
                     { label: 'Minimum Stock', field: 'minimum_stock' },
-                    { label: 'Category ID', field: 'category_id' },
                 ].map(({ label, field }) => (
                     <div key={field}>
                         <label className="mb-2 block text-sm text-slate-300">
@@ -187,6 +214,48 @@ export default function ProductForm({
                         />
                     </div>
                 ))}
+            </div>
+
+            <div>
+                <label
+                    htmlFor="product-category"
+                    className="mb-2 block text-sm text-slate-300"
+                >
+                    Category
+                </label>
+
+                <select
+                    id="product-category"
+                    required
+                    value={form.category_id || ''}
+                    onChange={(event) =>
+                        setForm({
+                            ...form,
+                            category_id: Number(event.target.value),
+                        })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
+                >
+                    <option value="" disabled>
+                        Select a category
+                    </option>
+
+                    {categories
+                        .filter(
+                            (category) =>
+                                category.is_active ||
+                                category.id === form.category_id
+                        )
+                        .map((category) => (
+                            <option
+                                key={category.id}
+                                value={category.id}
+                            >
+                                {category.name}
+                                {!category.is_active ? ' (Inactive)' : ''}
+                            </option>
+                        ))}
+                </select>
             </div>
 
             {error && (

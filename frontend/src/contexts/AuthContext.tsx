@@ -1,6 +1,7 @@
 import {
     createContext,
     useContext,
+    useEffect,
     useState,
     type ReactNode,
 } from 'react'
@@ -21,15 +22,38 @@ export function AuthProvider({
 }: {
     children: ReactNode
 }) {
-    const [token, setToken] = useState<string | null>(null)
+    const [token, setToken] = useState<string | null>(() => {
+        return sessionStorage.getItem('stockwise_token')
+    })
 
     const login = (accessToken: string) => {
+        sessionStorage.setItem('stockwise_token', accessToken)
         setToken(accessToken)
     }
 
     const logout = () => {
+        sessionStorage.removeItem('stockwise_token')
         setToken(null)
     }
+
+    useEffect(() => {
+        function handleUnauthorized() {
+            setToken(null)
+            sessionStorage.removeItem('stockwise_token')
+        }
+
+        window.addEventListener(
+            'stockwise:unauthorized',
+            handleUnauthorized
+        )
+
+        return () => {
+            window.removeEventListener(
+                'stockwise:unauthorized',
+                handleUnauthorized
+            )
+        }
+    }, [])
 
     return (
         <AuthContext.Provider

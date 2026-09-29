@@ -6,11 +6,14 @@ import { productService } from '../services/productService'
 import type { Product } from '../types/product'
 import ProductForm from '../components/ProductForm'
 import { Pencil, Power } from 'lucide-react'
+import { categoryService } from '../services/categoryService'
+import type { Category } from '../types/category'
 
 export default function ProductsPage() {
     const { token } = useAuth()
 
     const [products, setProducts] = useState<Product[]>([])
+    const [categories, setCategories] = useState<Category[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const [search, setSearch] = useState('')
@@ -88,10 +91,14 @@ export default function ProductsPage() {
 
         async function loadProducts() {
             try {
-                const data = await productService.getAll(token!)
+                const [data, categoryData] = await Promise.all([
+                    productService.getAll(token!),
+                    categoryService.getAll(token!),
+                ])
 
                 if (!cancelled) {
                     setProducts(data)
+                    setCategories(categoryData)
                 }
             } catch {
                 if (!cancelled) {
@@ -222,6 +229,7 @@ export default function ProductsPage() {
                             <tr>
                                 <th className="px-6 py-4">Product</th>
                                 <th className="px-6 py-4">Code</th>
+                                <th className="px-6 py-4">Category</th>
                                 <th className="px-6 py-4">Price</th>
                                 <th className="px-6 py-4">Stock</th>
                                 <th className="px-6 py-4">Status</th>
@@ -241,6 +249,12 @@ export default function ProductsPage() {
 
                                     <td className="px-6 py-4 text-slate-400">
                                         {product.code}
+                                    </td>
+
+                                    <td className="px-6 py-4 text-slate-300">
+                                        {categories.find(
+                                            (category) => category.id === product.category_id
+                                        )?.name ?? 'Unknown'}
                                     </td>
 
                                     <td className="px-6 py-4 text-white">
