@@ -15,6 +15,8 @@ export default function SalesPage() {
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
     const [cancellingSaleId, setCancellingSaleId] = useState<number | null>(null)
+    const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
+    const [loadingSaleId, setLoadingSaleId] = useState<number | null>(null)
     const [products, setProducts] = useState<Product[]>([])
 
     async function loadSales() {
@@ -47,6 +49,26 @@ export default function SalesPage() {
             )
         } catch {
             setError('Could not load products.')
+        }
+    }
+
+    async function handleViewSale(saleId: number) {
+        if (!token) {
+            return
+        }
+
+        setError('')
+        setSuccess('')
+
+        setLoadingSaleId(saleId)
+
+        try {
+            const sale = await saleService.getById(token, saleId)
+            setSelectedSale(sale)
+        } catch {
+            setError('Could not load the sale details.')
+        } finally {
+            setLoadingSaleId(null)
         }
     }
 
@@ -236,6 +258,18 @@ export default function SalesPage() {
                                         </td>
 
                                         <td className="px-4 py-3">
+                                            {sale.id !== null && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleViewSale(sale.id!)}
+                                                    disabled={loadingSaleId !== null}
+                                                    className="mr-2 rounded-lg border border-zinc-700 px-3 py-2 text-sm font-medium text-zinc-300 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                                >
+                                                    {loadingSaleId === sale.id
+                                                        ? 'Loading...'
+                                                        : 'View details'}
+                                                </button>
+                                            )}
                                             {user?.role === 'admin' &&
                                                 sale.status === 'completed' && (
                                                     <button
@@ -246,9 +280,11 @@ export default function SalesPage() {
                                                             }
                                                         }}
                                                         disabled={cancellingSaleId !== null}
-                                                        className="rounded-lg border border-red-500/30 px-3 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/10"
+                                                        className="rounded-lg border border-red-500/30 px-3 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
                                                     >
-                                                        Cancel sale
+                                                        {cancellingSaleId === sale.id
+                                                            ? 'Cancelling...'
+                                                            : 'Cancel sale'}
                                                     </button>
                                                 )}
                                         </td>
@@ -256,6 +292,82 @@ export default function SalesPage() {
                                 ))}
                             </tbody>
                         </table>
+                        {selectedSale && (
+                            <div className="mt-6 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-lg font-semibold text-white">
+                                        Sale #{selectedSale.id}
+                                    </h2>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedSale(null)}
+                                        className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+
+                                <p className="mt-2 text-sm text-zinc-400">
+                                    Status:{' '}
+                                    <span className="font-medium text-zinc-200">
+                                        {selectedSale.status}
+                                    </span>
+                                </p>
+
+                                <p className="mt-2 text-sm text-zinc-400">
+                                    Total:{' '}
+                                    <span className="font-medium text-zinc-200">
+                                        ${selectedSale.total.toLocaleString()}
+                                    </span>
+                                </p>
+
+                                <p className="mt-2 text-sm text-zinc-400">
+                                    Date:{' '}
+                                    <span className="font-medium text-zinc-200">
+                                        {selectedSale.created_at
+                                            ? new Date(selectedSale.created_at).toLocaleString()
+                                            : '—'}
+                                    </span>
+                                </p>
+
+                                <p className="mt-2 text-sm text-zinc-400">
+                                    Seller ID:{' '}
+                                    <span className="font-medium text-zinc-200">
+                                        {selectedSale.seller_id}
+                                    </span>
+                                </p>
+
+                                <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide text-zinc-300">
+                                    Products
+                                </h3>
+
+                                <div className="mt-3 space-y-2">
+                                    {selectedSale.items.map((item) => (
+                                        <div
+                                            key={item.product_id}
+                                            className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3"
+                                        >
+                                            <p className="text-sm text-zinc-300">
+                                                Product ID: {item.product_id}
+                                            </p>
+
+                                            <p className="mt-1 text-sm text-zinc-400">
+                                                Quantity: {item.quantity}
+                                            </p>
+
+                                            <p className="mt-1 text-sm text-zinc-400">
+                                                Unit price: ${item.unit_price.toLocaleString()}
+                                            </p>
+
+                                            <p className="mt-1 text-sm font-medium text-zinc-300">
+                                                Subtotal: ${item.subtotal.toLocaleString()}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
