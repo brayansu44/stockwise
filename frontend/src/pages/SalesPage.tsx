@@ -19,6 +19,12 @@ export default function SalesPage() {
     const [loadingSaleId, setLoadingSaleId] = useState<number | null>(null)
     const [products, setProducts] = useState<Product[]>([])
 
+    function getProductById(productId: number) {
+        return products.find(
+            (product) => product.id === productId
+        )
+    }
+
     async function loadSales() {
         if (!token) {
             return
@@ -247,8 +253,17 @@ export default function SalesPage() {
                                             })}
                                         </td>
 
-                                        <td className="p-4 capitalize">
-                                            {sale.status}
+                                        <td className="p-4">
+                                            <span
+                                                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${sale.status === 'completed'
+                                                    ? 'bg-green-500/10 text-green-400'
+                                                    : 'bg-red-500/10 text-red-400'
+                                                    }`}
+                                            >
+                                                {sale.status === 'completed'
+                                                    ? 'Completed'
+                                                    : 'Cancelled'}
+                                            </span>
                                         </td>
 
                                         <td className="p-4">
@@ -258,35 +273,37 @@ export default function SalesPage() {
                                         </td>
 
                                         <td className="px-4 py-3">
-                                            {sale.id !== null && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleViewSale(sale.id!)}
-                                                    disabled={loadingSaleId !== null}
-                                                    className="mr-2 rounded-lg border border-zinc-700 px-3 py-2 text-sm font-medium text-zinc-300 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
-                                                >
-                                                    {loadingSaleId === sale.id
-                                                        ? 'Loading...'
-                                                        : 'View details'}
-                                                </button>
-                                            )}
-                                            {user?.role === 'admin' &&
-                                                sale.status === 'completed' && (
+                                            <div className="flex items-center gap-2">
+                                                {sale.id !== null && (
                                                     <button
                                                         type="button"
-                                                        onClick={() => {
-                                                            if (sale.id !== null) {
-                                                                handleCancelSale(sale.id)
-                                                            }
-                                                        }}
-                                                        disabled={cancellingSaleId !== null}
-                                                        className="rounded-lg border border-red-500/30 px-3 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        onClick={() => handleViewSale(sale.id!)}
+                                                        disabled={loadingSaleId !== null}
+                                                        className="rounded-lg border border-zinc-700 px-3 py-2 text-sm font-medium text-zinc-300 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
                                                     >
-                                                        {cancellingSaleId === sale.id
-                                                            ? 'Cancelling...'
-                                                            : 'Cancel sale'}
+                                                        {loadingSaleId === sale.id
+                                                            ? 'Loading...'
+                                                            : 'View details'}
                                                     </button>
                                                 )}
+                                                {user?.role === 'admin' &&
+                                                    sale.status === 'completed' && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                if (sale.id !== null) {
+                                                                    handleCancelSale(sale.id)
+                                                                }
+                                                            }}
+                                                            disabled={cancellingSaleId !== null}
+                                                            className="rounded-lg border border-red-500/30 px-3 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        >
+                                                            {cancellingSaleId === sale.id
+                                                                ? 'Cancelling...'
+                                                                : 'Cancel sale'}
+                                                        </button>
+                                                    )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -348,8 +365,13 @@ export default function SalesPage() {
                                             key={item.product_id}
                                             className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3"
                                         >
-                                            <p className="text-sm text-zinc-300">
-                                                Product ID: {item.product_id}
+                                            <p className="text-sm font-medium text-white">
+                                                {getProductById(item.product_id)?.name ??
+                                                    `Product #${item.product_id}`}
+                                            </p>
+
+                                            <p className="mt-1 text-xs text-zinc-500">
+                                                Code: {getProductById(item.product_id)?.code ?? '—'}
                                             </p>
 
                                             <p className="mt-1 text-sm text-zinc-400">
