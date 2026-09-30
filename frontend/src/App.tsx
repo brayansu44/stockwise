@@ -7,6 +7,7 @@ import DashboardLayout from './layouts/DashboardLayout'
 import ProductsPage from './pages/ProductsPage'
 import CategoriesPage from './pages/CategoriesPage'
 import InventoryPage from './pages/InventoryPage'
+import SalesPage from './pages/SalesPage'
 
 function App() {
   const { isAuthenticated } = useAuth()
@@ -39,12 +40,11 @@ function App() {
             element={<DashboardPage />}
           />
 
-          <Route
-            path="/products"
-            element={<ProductsPage />}
-          />
+          <Route path="/products" element={<ProductsPage />}/>
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/inventory" element={<InventoryPage />} />
+          <Route path="/sales" element={<SalesPage />} />
+          
         </Route>
       </Route>
 

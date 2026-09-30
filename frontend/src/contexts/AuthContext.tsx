@@ -5,9 +5,12 @@ import {
     useState,
     type ReactNode,
 } from 'react'
+import type { User } from '../types/user'
+import { authService } from '../services/authService'
 
 interface AuthContextType {
     token: string | null
+    user: User | null
     isAuthenticated: boolean
     login: (accessToken: string) => void
     logout: () => void
@@ -26,6 +29,37 @@ export function AuthProvider({
         return sessionStorage.getItem('stockwise_token')
     })
 
+    const [user, setUser] = useState<User | null>(null)
+
+    useEffect(() => {
+        let cancelled = false
+
+        async function loadUser() {
+            if (!token) {
+                setUser(null)
+                return
+            }
+
+            try {
+                const currentUser = await authService.getMe(token)
+
+                if (!cancelled) {
+                    setUser(currentUser)
+                }
+            } catch {
+                if (!cancelled) {
+                    setUser(null)
+                }
+            }
+        }
+
+        loadUser()
+
+        return () => {
+            cancelled = true
+        }
+    }, [token])
+
     const login = (accessToken: string) => {
         sessionStorage.setItem('stockwise_token', accessToken)
         setToken(accessToken)
@@ -34,11 +68,13 @@ export function AuthProvider({
     const logout = () => {
         sessionStorage.removeItem('stockwise_token')
         setToken(null)
+        setUser(null)
     }
 
     useEffect(() => {
         function handleUnauthorized() {
             setToken(null)
+            setUser(null)
             sessionStorage.removeItem('stockwise_token')
         }
 
@@ -59,6 +95,7 @@ export function AuthProvider({
         <AuthContext.Provider
             value={{
                 token,
+                user,
                 isAuthenticated: Boolean(token),
                 login,
                 logout,
