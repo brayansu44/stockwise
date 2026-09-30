@@ -18,9 +18,10 @@ export default function SalesPage() {
     const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
     const [loadingSaleId, setLoadingSaleId] = useState<number | null>(null)
     const [products, setProducts] = useState<Product[]>([])
+    const [allProducts, setAllProducts] = useState<Product[]>([])
 
     function getProductById(productId: number) {
-        return products.find(
+        return allProducts.find(
             (product) => product.id === productId
         )
     }
@@ -46,6 +47,8 @@ export default function SalesPage() {
 
         try {
             const data = await productService.getAll(token)
+
+            setAllProducts(data)
 
             setProducts(
                 data.filter(
@@ -156,6 +159,8 @@ export default function SalesPage() {
                 const data = await productService.getAll(token)
 
                 if (!cancelled) {
+                    setAllProducts(data)
+
                     setProducts(
                         data.filter(
                             (product) =>
@@ -166,6 +171,7 @@ export default function SalesPage() {
             } catch {
                 if (!cancelled) {
                     setProducts([])
+                    setAllProducts([])
                 }
             }
         }
