@@ -6,6 +6,7 @@ import ProtectedRoute from './routes/ProtectedRoute'
 import DashboardLayout from './layouts/DashboardLayout'
 import ProductsPage from './pages/ProductsPage'
 import CategoriesPage from './pages/CategoriesPage'
+import InventoryPage from './pages/InventoryPage'
 
 function App() {
   const { isAuthenticated } = useAuth()
@@ -43,6 +44,7 @@ function App() {
             element={<ProductsPage />}
           />
           <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/inventory" element={<InventoryPage />} />
         </Route>
       </Route>
 

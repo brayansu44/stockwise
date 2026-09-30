@@ -53,10 +53,18 @@ export default function DashboardLayout() {
                         Categories
                     </NavLink>
 
-                    <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-slate-400 transition hover:bg-slate-800 hover:text-white">
+                    <NavLink
+                        to="/inventory"
+                        className={({ isActive }) =>
+                            `flex w-full items-center gap-3 rounded-lg px-4 py-3 transition ${isActive
+                                ? 'bg-blue-600 text-white'
+                                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            }`
+                        }
+                    >
                         <Boxes size={20} />
                         Inventory
-                    </button>
+                    </NavLink>
 
                     <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-slate-400 transition hover:bg-slate-800 hover:text-white">
                         <ShoppingCart size={20} />
