@@ -66,6 +66,11 @@ export default function SalesPage() {
             return
         }
 
+        if (selectedSale?.id === saleId) {
+            setSelectedSale(null)
+            return
+        }
+
         setError('')
         setSuccess('')
 
@@ -336,8 +341,8 @@ export default function SalesPage() {
 
                                     <span
                                         className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${selectedSale.status === 'completed'
-                                                ? 'bg-green-500/10 text-green-400'
-                                                : 'bg-red-500/10 text-red-400'
+                                            ? 'bg-green-500/10 text-green-400'
+                                            : 'bg-red-500/10 text-red-400'
                                             }`}
                                     >
                                         {selectedSale.status === 'completed'
