@@ -109,6 +109,10 @@ export default function SalesPage() {
             await loadSales()
             await loadProducts()
 
+            if (selectedSale?.id === saleId) {
+                setSelectedSale(null)
+            }
+
             setError('')
             setSuccess(`Sale #${saleId} cancelled successfully.`)
         } catch {
