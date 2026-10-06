@@ -331,12 +331,20 @@ export default function SalesPage() {
                                     </button>
                                 </div>
 
-                                <p className="mt-2 text-sm text-zinc-400">
-                                    Status:{' '}
-                                    <span className="font-medium text-zinc-200">
-                                        {selectedSale.status}
+                                <div className="mt-2 flex items-center gap-2 text-sm text-zinc-400">
+                                    <span>Status:</span>
+
+                                    <span
+                                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${selectedSale.status === 'completed'
+                                                ? 'bg-green-500/10 text-green-400'
+                                                : 'bg-red-500/10 text-red-400'
+                                            }`}
+                                    >
+                                        {selectedSale.status === 'completed'
+                                            ? 'Completed'
+                                            : 'Cancelled'}
                                     </span>
-                                </p>
+                                </div>
 
                                 <p className="mt-2 text-sm text-zinc-400">
                                     Total:{' '}
