@@ -1,9 +1,15 @@
-import { LayoutDashboard, Package, Boxes, ShoppingCart } from 'lucide-react'
+import {
+    LayoutDashboard,
+    Package,
+    Boxes,
+    ShoppingCart,
+    Users,
+} from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { NavLink, Outlet } from 'react-router'
 
 export default function DashboardLayout() {
-    const { logout } = useAuth()
+    const { user, logout } = useAuth()
 
     return (
         <div className="min-h-screen bg-slate-950 text-white">
@@ -78,6 +84,21 @@ export default function DashboardLayout() {
                         <ShoppingCart size={20} />
                         Sales
                     </NavLink>
+
+                    {user?.role === 'admin' && (
+                        <NavLink
+                            to="/users"
+                            className={({ isActive }) =>
+                                `flex w-full items-center gap-3 rounded-lg px-4 py-3 transition ${isActive
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                }`
+                            }
+                        >
+                            <Users size={20} />
+                            Users
+                        </NavLink>
+                    )}
                 </nav>
 
                 <div className="absolute bottom-0 w-full border-t border-slate-800 p-4">
