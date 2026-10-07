@@ -29,7 +29,7 @@ These challenges frequently result in:
 
 ### System Administrator
 
-Responsible for configuring the platform, managing users, products, categories, inventory, and accessing business reports.
+Responsible for managing users, products, categories, inventory, sales, and monitoring key operational information through the dashboard.
 
 ### Sales Representative
 
@@ -45,14 +45,18 @@ Responsible for recording inventory entries, stock adjustments, and inventory mo
 
 The platform must allow users to:
 
+- Manage system users and their access roles.
 - Manage products and categories.
-- Register inventory entries and stock adjustments.
-- Record sales transactions.
-- Automatically update inventory levels.
-- Generate low-stock alerts.
-- Access operational reports.
-- Control system access through user roles.
-- Maintain complete traceability of inventory operations.
+- Register inventory entries, exits, and stock adjustments.
+- Maintain a historical record of inventory movements.
+- Record and consult sales transactions.
+- Automatically update inventory levels after inventory and sales operations.
+- Cancel eligible sales while preserving their historical information.
+- Restore inventory when a sale is cancelled.
+- Identify products with low stock.
+- Monitor key operational information through a dashboard.
+- Control system access through authentication and user roles.
+- Maintain traceability of inventory movements and sales.
 
 ---
 
@@ -60,12 +64,19 @@ The platform must allow users to:
 
 - Every product must belong to a category.
 - Every product must define a minimum stock level.
+- A sale must contain at least one valid item.
 - A sale cannot be completed if there is insufficient stock.
 - Every completed sale must automatically decrease the available inventory.
-- Every inventory entry must increase the available stock.
-- The system must generate a low-stock alert whenever the current stock is less than or equal to the minimum stock.
+- Cancelling an eligible sale must restore the corresponding inventory.
+- Cancelled sales must remain available as historical records.
+- Inventory movements must update product stock according to their movement type.
+- Inventory and sales history must be preserved for traceability.
+- A product is considered low stock when its current stock is less than or equal to its minimum stock level.
 - Only administrators are allowed to manage users.
-- Only authenticated users may access the platform.
+- User email addresses must be unique.
+- Inactive users cannot authenticate.
+- Only authenticated users may access protected platform features.
+- Access to restricted operations must respect the user's assigned role.
 
 ---
 
@@ -75,13 +86,18 @@ The first version of StockWise will include:
 
 - User authentication.
 - Role-based access control.
+- User management.
 - Category management.
 - Product management.
-- Inventory entry management.
+- Inventory movement management.
+- Inventory movement history.
 - Sales registration.
-- Low-stock alerts.
+- Sales history and detail consultation.
+- Sale cancellation and stock restoration.
+- Low-stock identification.
 - Operational dashboard.
 - REST API documentation using Swagger.
+- Automated tests for critical application behavior.
 
 ---
 
@@ -96,3 +112,9 @@ The following features are intentionally excluded from the first release:
 - Mobile application.
 - Advanced Artificial Intelligence features.
 - Full microservices architecture.
+- PDF report generation.
+- Excel export.
+- Email notifications.
+- Exchange rate integration.
+- Redis caching.
+- Production containerization and deployment automation.
