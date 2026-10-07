@@ -122,7 +122,7 @@ Role-based restrictions are enforced by the backend according to the operation.
 | GET | `/products/` | Lists products. | Required |
 | POST | `/products/` | Creates a product. | Required |
 | GET | `/products/low-stock` | Lists products whose current stock is at or below their configured minimum stock. | Required |
-| GET | `/products/{code}` | Returns a product using its unique code. | Public |
+| GET | `/products/{code}` | Returns a product using its unique code. | Required |
 | PATCH | `/products/{code}` | Updates a product. | Required |
 | PATCH | `/products/{code}/activate` | Activates a product. | Required |
 | PATCH | `/products/{code}/deactivate` | Deactivates a product. | Required |

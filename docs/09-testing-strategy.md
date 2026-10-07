@@ -108,6 +108,7 @@ The test suite includes verification of scenarios such as:
 - Administrator-only operations.
 - Inactive-user authentication prevention.
 - Authenticated-user information retrieval.
+- Authentication enforcement for individual product lookup.
 
 Authorization is tested at the backend level because backend rules are the authoritative security mechanism.
 
@@ -249,7 +250,7 @@ Testing failure scenarios helps ensure predictable API behavior.
 At the Version 1.0 documentation stage, the backend test suite reached:
 
 ```text
-231 passed
+232 passed
 ```
 
 with overall measured coverage of approximately:

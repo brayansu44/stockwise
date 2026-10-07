@@ -183,6 +183,14 @@ def test_create_product_as_admin(client, db_session):
     assert data["category_id"] == category.id
     assert data["current_stock"] == 15
 
+def test_get_product_by_code_without_authentication(client):
+    # Act
+    response = client.get("/products/LOOKUP-001")
+
+    # Assert
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
 def test_get_product_by_code(client, db_session):
     # Arrange: Create a category
     category_repository = PostgresCategoryRepository(db_session)
@@ -211,8 +219,32 @@ def test_get_product_by_code(client, db_session):
 
     product_repository.create(product)
 
+    # Arrange: Create an authenticated user
+    user_repository = PostgresUserRepository(db_session)
+
+    user = user_repository.create(
+        User(
+            id=None,
+            name="Product Lookup User",
+            email="product.lookup@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(user.id)
+    )
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
     # Act
-    response = client.get("/products/LOOKUP-001")
+    response = client.get(
+        "/products/LOOKUP-001",
+        headers=headers,
+    )
 
     # Assert
     assert response.status_code == 200
@@ -223,10 +255,33 @@ def test_get_product_by_code(client, db_session):
     assert data["name"] == "Lookup Test Product"
     assert data["category_id"] == category.id
 
-def test_get_product_by_code_not_found(client):
+
+def test_get_product_by_code_not_found(client, db_session):
+    # Arrange: Create an authenticated user
+    user_repository = PostgresUserRepository(db_session)
+
+    user = user_repository.create(
+        User(
+            id=None,
+            name="Product Lookup Not Found User",
+            email="product.lookup.notfound@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(user.id)
+    )
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
     # Act
     response = client.get(
-        "/products/NONEXISTENT-PRODUCT-999999"
+        "/products/NONEXISTENT-PRODUCT-999999",
+        headers=headers,
     )
 
     # Assert

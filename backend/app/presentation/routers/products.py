@@ -93,16 +93,25 @@ def list_low_stock_products(
         for product in products
     ]
 
-@router.get("/{code}", response_model=ProductResponse)
+@router.get(
+    "/{code}",
+    response_model=ProductResponse,
+)
 def get_product_by_code(
     code: str,
-    use_case: GetProductByCodeUseCase = Depends(get_product_by_code_use_case)
-):
+    use_case: GetProductByCodeUseCase = Depends(get_product_by_code_use_case),
+    current_user: User = Depends(get_current_user),
+) -> ProductResponse:
     try:
         product = use_case.execute(code)
+
         return ProductMapper.entity_to_response(product)
-    except ValueError as error:
-        raise HTTPException(status_code=404, detail=str(error))
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
     
 @router.patch(
     "/{code}",
