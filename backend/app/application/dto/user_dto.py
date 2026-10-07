@@ -7,6 +7,10 @@ class CreateUserRequest(BaseModel):
     password: str = Field(..., min_length=8, max_length=128)
     role: UserRole
 
+class UpdateUserRequest(BaseModel):
+    name: str = Field(..., min_length=2, max_length=100)
+    email: EmailStr
+    role: UserRole
 
 class UserResponse(BaseModel):
     id: int

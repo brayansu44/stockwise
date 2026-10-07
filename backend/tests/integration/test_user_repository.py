@@ -104,3 +104,85 @@ def test_get_user_by_id_not_found(db_session):
 
     # Assert
     assert found_user is None
+
+def test_get_all_users_successfully(db_session):
+    # Arrange
+    user_repository = PostgresUserRepository(db_session)
+
+    first_user = User(
+        id=None,
+        name="First User",
+        email="first.repository@test.com",
+        hashed_password="test_password_hash",
+        role=UserRole.ADMIN,
+    )
+
+    second_user = User(
+        id=None,
+        name="Second User",
+        email="second.repository@test.com",
+        hashed_password="test_password_hash",
+        role=UserRole.SELLER,
+    )
+
+    first_created_user = user_repository.create(first_user)
+    second_created_user = user_repository.create(second_user)
+
+    # Act
+    users = user_repository.get_all()
+
+    # Assert
+    user_ids = [user.id for user in users]
+
+    assert first_created_user.id in user_ids
+    assert second_created_user.id in user_ids
+
+def test_update_user_successfully(db_session):
+    # Arrange
+    user_repository = PostgresUserRepository(db_session)
+
+    user = User(
+        id=None,
+        name="Original User",
+        email="original.repository@test.com",
+        hashed_password="original_password_hash",
+        role=UserRole.SELLER,
+    )
+
+    created_user = user_repository.create(user)
+
+    created_user.name = "Updated User"
+    created_user.email = "updated.repository@test.com"
+    created_user.hashed_password = "updated_password_hash"
+    created_user.role = UserRole.INVENTORY_OPERATOR
+    created_user.is_active = False
+
+    # Act
+    updated_user = user_repository.update(created_user)
+
+    # Assert
+    assert updated_user.id == created_user.id
+    assert updated_user.name == "Updated User"
+    assert updated_user.email == "updated.repository@test.com"
+    assert updated_user.hashed_password == "updated_password_hash"
+    assert updated_user.role == UserRole.INVENTORY_OPERATOR
+    assert updated_user.is_active is False
+
+def test_update_user_not_found(db_session):
+    # Arrange
+    user_repository = PostgresUserRepository(db_session)
+
+    user = User(
+        id=999999999,
+        name="Nonexistent User",
+        email="nonexistent.repository@test.com",
+        hashed_password="test_password_hash",
+        role=UserRole.SELLER,
+    )
+
+    # Act / Assert
+    with pytest.raises(
+        ValueError,
+        match="User not found",
+    ):
+        user_repository.update(user)

@@ -2,6 +2,9 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.application.use_cases.create_user import CreateUserUseCase
+from app.application.use_cases.get_users import GetUsersUseCase
+from app.application.use_cases.update_user import UpdateUserUseCase
+from app.application.use_cases.change_user_status import ChangeUserStatusUseCase
 from app.infrastructure.repositories.postgres_user_repository import (
     PostgresUserRepository,
 )
@@ -28,6 +31,27 @@ def get_create_user_use_case(
     return CreateUserUseCase(
         user_repository=user_repository,
         password_hasher=password_hasher,
+    )
+
+def get_users_use_case(
+    user_repository: PostgresUserRepository = Depends(get_user_repository),
+) -> GetUsersUseCase:
+    return GetUsersUseCase(
+        user_repository=user_repository,
+    )
+
+def get_update_user_use_case(
+    user_repository: PostgresUserRepository = Depends(get_user_repository),
+) -> UpdateUserUseCase:
+    return UpdateUserUseCase(
+        user_repository=user_repository,
+    )
+
+def get_change_user_status_use_case(
+    user_repository: PostgresUserRepository = Depends(get_user_repository),
+) -> ChangeUserStatusUseCase:
+    return ChangeUserStatusUseCase(
+        user_repository=user_repository,
     )
 
 def get_token_service() -> JwtTokenService:

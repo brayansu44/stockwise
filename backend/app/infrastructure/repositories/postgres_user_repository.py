@@ -48,6 +48,39 @@ class PostgresUserRepository(UserRepository):
             return None
 
         return self._to_entity(user_model)
+    
+    def get_all(self) -> list[User]:
+        user_models = (
+            self.db_session.query(UserModel)
+            .order_by(UserModel.id.asc())
+            .all()
+        )
+
+        return [
+            self._to_entity(user_model)
+            for user_model in user_models
+        ]
+    
+    def update(self, user: User) -> User:
+        user_model = (
+            self.db_session.query(UserModel)
+            .filter(UserModel.id == user.id)
+            .first()
+        )
+
+        if not user_model:
+            raise ValueError("User not found")
+
+        user_model.name = user.name
+        user_model.email = user.email
+        user_model.hashed_password = user.hashed_password
+        user_model.role = user.role.value
+        user_model.is_active = user.is_active
+
+        self.db_session.commit()
+        self.db_session.refresh(user_model)
+
+        return self._to_entity(user_model)
 
     def _to_entity(self, user_model: UserModel) -> User:
         return User(

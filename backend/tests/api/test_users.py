@@ -238,3 +238,303 @@ def test_create_user_with_short_password(client, db_session):
     )
 
     assert created_user is None
+
+def test_get_users_as_admin(client, db_session):
+    # Arrange
+    user_repository = PostgresUserRepository(db_session)
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="List Users Admin",
+            email="admin.list.users@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    user_repository.create(
+        User(
+            id=None,
+            name="List Users Seller",
+            email="seller.list.users@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.SELLER,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    # Act
+    response = client.get(
+        "/users/",
+        headers=headers,
+    )
+
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    emails = [user["email"] for user in data]
+
+    assert "admin.list.users@test.com" in emails
+    assert "seller.list.users@test.com" in emails
+
+def test_update_user_as_admin(client, db_session):
+    # Arrange
+    user_repository = PostgresUserRepository(db_session)
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Update User Admin",
+            email="admin.update.user@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    user = user_repository.create(
+        User(
+            id=None,
+            name="Original User",
+            email="original.api@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.SELLER,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    payload = {
+        "name": "Updated User",
+        "email": "updated.api@test.com",
+        "role": UserRole.INVENTORY_OPERATOR.value,
+    }
+
+    # Act
+    response = client.put(
+        f"/users/{user.id}",
+        json=payload,
+        headers=headers,
+    )
+
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    assert data["id"] == user.id
+    assert data["name"] == "Updated User"
+    assert data["email"] == "updated.api@test.com"
+    assert data["role"] == UserRole.INVENTORY_OPERATOR.value
+    assert data["is_active"] is True
+
+def test_update_user_not_found(client, db_session):
+    # Arrange
+    user_repository = PostgresUserRepository(db_session)
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Update Not Found Admin",
+            email="admin.update.notfound@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    payload = {
+        "name": "Nonexistent User",
+        "email": "nonexistent.update@test.com",
+        "role": UserRole.SELLER.value,
+    }
+
+    # Act
+    response = client.put(
+        "/users/999999999",
+        json=payload,
+        headers=headers,
+    )
+
+    # Assert
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "User not found"
+
+def test_deactivate_user_as_admin(client, db_session):
+    # Arrange
+    user_repository = PostgresUserRepository(db_session)
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Deactivate User Admin",
+            email="admin.deactivate@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    user = user_repository.create(
+        User(
+            id=None,
+            name="User To Deactivate",
+            email="user.deactivate@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.SELLER,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    # Act
+    response = client.patch(
+        f"/users/{user.id}/deactivate",
+        headers=headers,
+    )
+
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    assert data["id"] == user.id
+    assert data["is_active"] is False
+
+def test_activate_user_as_admin(client, db_session):
+    # Arrange
+    user_repository = PostgresUserRepository(db_session)
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Activate User Admin",
+            email="admin.activate@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    user = user_repository.create(
+        User(
+            id=None,
+            name="User To Activate",
+            email="user.activate@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.SELLER,
+            is_active=False,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    # Act
+    response = client.patch(
+        f"/users/{user.id}/activate",
+        headers=headers,
+    )
+
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    assert data["id"] == user.id
+    assert data["is_active"] is True
+
+def test_deactivate_user_not_found(client, db_session):
+    # Arrange
+    user_repository = PostgresUserRepository(db_session)
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Deactivate Not Found Admin",
+            email="admin.deactivate.notfound@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    # Act
+    response = client.patch(
+        "/users/999999999/deactivate",
+        headers=headers,
+    )
+
+    # Assert
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "User not found"
+
+def test_activate_user_not_found(client, db_session):
+    # Arrange
+    user_repository = PostgresUserRepository(db_session)
+
+    admin = user_repository.create(
+        User(
+            id=None,
+            name="Activate Not Found Admin",
+            email="admin.activate.notfound@test.com",
+            hashed_password="test_password_hash",
+            role=UserRole.ADMIN,
+        )
+    )
+
+    token = JwtTokenService().create_access_token(
+        subject=str(admin.id)
+    )
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    # Act
+    response = client.patch(
+        "/users/999999999/activate",
+        headers=headers,
+    )
+
+    # Assert
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "User not found"
