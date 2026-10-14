@@ -38,7 +38,7 @@ def create_inventory_movement(
     use_case: CreateInventoryMovementUseCase = Depends(
         get_create_inventory_movement_use_case
     ),
-    _current_user=Depends(
+    current_user=Depends(
         require_roles(
             UserRole.ADMIN,
             UserRole.INVENTORY_OPERATOR,
@@ -46,7 +46,11 @@ def create_inventory_movement(
     ),
 ) -> InventoryMovementResponse:
     try:
+        if current_user.id is None:
+            raise ValueError("Authenticated user ID is missing")
+
         movement = use_case.execute(
+            user_id=current_user.id,
             product_code=request.product_code,
             movement_type=request.movement_type,
             quantity=request.quantity,
@@ -60,7 +64,7 @@ def create_inventory_movement(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
         ) from exc
-        
+
 @router.get(
     "/product/{product_code}",
     response_model=list[InventoryMovementResponse],

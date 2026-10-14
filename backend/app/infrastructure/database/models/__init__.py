@@ -6,3 +6,4 @@ from app.infrastructure.database.models.inventory_movement_model import (
     InventoryMovementModel,
 )
 from app.infrastructure.database.models.sale_item_model import SaleItemModel
+from app.infrastructure.database.models.audit_log_model import AuditLogModel

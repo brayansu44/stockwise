@@ -21,6 +21,7 @@ from app.infrastructure.database.models.inventory_movement_model import (
 from app.infrastructure.database.models.sale_model import SaleModel
 from app.infrastructure.database.models.sale_item_model import SaleItemModel
 from app.infrastructure.database.models.category_model import CategoryModel
+from app.infrastructure.database.models.audit_log_model import AuditLogModel
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
