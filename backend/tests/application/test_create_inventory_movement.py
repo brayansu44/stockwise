@@ -13,13 +13,12 @@ from tests.application.test_create_sale import (
 
 from app.domain.unit_of_work import UnitOfWork
 
-from app.domain.entities.audit_log import AuditLog
-from app.domain.repositories.audit_log_repository import (
-    AuditLogRepository,
-)
-
 from app.domain.entities.audit_action import AuditAction
 from app.domain.entities.audit_result import AuditResult
+
+from tests.fakes.fake_audit_log_repository import (
+    FakeAuditLogRepository,
+)
 
 class FailingInventoryMovementRepository(
     FakeInventoryMovementRepository
@@ -37,20 +36,6 @@ class FakeUnitOfWork(UnitOfWork):
 
     def rollback(self) -> None:
         self.rolled_back = True
-
-class FakeAuditLogRepository(AuditLogRepository):
-    def __init__(self):
-        self.audit_logs: list[AuditLog] = []
-
-    def create_without_commit(
-        self,
-        audit_log: AuditLog,
-    ) -> AuditLog:
-        audit_log.id = len(self.audit_logs) + 1
-        self.audit_logs.append(audit_log)
-
-        return audit_log
-
 
 def test_create_inventory_entry_successfully():
     product = Product(

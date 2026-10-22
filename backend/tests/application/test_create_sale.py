@@ -4,6 +4,7 @@ from app.application.use_cases.create_sale import CreateSaleUseCase
 from app.domain.entities.product import Product
 from app.domain.entities.sale import Sale
 from app.domain.entities.inventory_movement import InventoryMovement
+from app.domain.entities.sale_status import SaleStatus
 from app.domain.repositories.product_repository import ProductRepository
 from app.domain.repositories.sale_repository import SaleRepository
 from app.domain.repositories.inventory_movement_repository import (
@@ -12,6 +13,12 @@ from app.domain.repositories.inventory_movement_repository import (
 from app.application.dto.sale_dto import CreateSaleItemRequest
 from app.domain.entities.movement_type import MovementType
 from app.domain.unit_of_work import UnitOfWork
+from tests.fakes.fake_audit_log_repository import (
+    FakeAuditLogRepository,
+)
+from app.domain.entities.audit_action import AuditAction
+from app.domain.entities.audit_result import AuditResult
+
 class FakeProductRepository(ProductRepository):
     def __init__(self, products: list[Product] | None = None):
         self.products = products or []
@@ -153,6 +160,9 @@ def sale_repository() -> FakeSaleRepository:
 def movement_repository() -> FakeInventoryMovementRepository:
     return FakeInventoryMovementRepository()
 
+@pytest.fixture
+def audit_log_repository() -> FakeAuditLogRepository:
+    return FakeAuditLogRepository()
 
 @pytest.fixture
 def unit_of_work() -> FakeUnitOfWork:
@@ -163,12 +173,14 @@ def use_case(
     sale_repository: FakeSaleRepository,
     product_repository: FakeProductRepository,
     movement_repository: FakeInventoryMovementRepository,
+    audit_log_repository: FakeAuditLogRepository,
     unit_of_work: FakeUnitOfWork,
 ) -> CreateSaleUseCase:
     return CreateSaleUseCase(
         sale_repository=sale_repository,
         product_repository=product_repository,
         inventory_movement_repository=movement_repository,
+        audit_log_repository=audit_log_repository,
         unit_of_work=unit_of_work,
     )
     
@@ -177,6 +189,7 @@ def test_create_sale_successfully(
     product_repository: FakeProductRepository,
     sale_repository: FakeSaleRepository,
     movement_repository: FakeInventoryMovementRepository,
+    audit_log_repository: FakeAuditLogRepository,
     unit_of_work: FakeUnitOfWork,
 ):
     items = [
@@ -214,6 +227,29 @@ def test_create_sale_successfully(
 
     assert unit_of_work.committed is True
     assert unit_of_work.rolled_back is False
+    
+    assert len(audit_log_repository.audit_logs) == 1
+
+    audit_log = audit_log_repository.audit_logs[0]
+
+    assert audit_log.user_id == 1
+    assert audit_log.action == AuditAction.SALE_CREATE
+    assert audit_log.entity_type == "sale"
+    assert audit_log.entity_id == "1"
+    assert audit_log.old_values is None
+    assert audit_log.result == AuditResult.SUCCESS
+
+    assert audit_log.new_values == {
+        "seller_id": 1,
+        "status": SaleStatus.COMPLETED.value,
+        "items": [
+            {
+                "product_id": 1,
+                "quantity": 2,
+                "unit_price": "250000",
+            }
+        ],
+    }
     
 def test_create_sale_with_invalid_seller_id(
     use_case: CreateSaleUseCase,

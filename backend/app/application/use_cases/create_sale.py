@@ -14,6 +14,14 @@ from app.domain.repositories.inventory_movement_repository import (
 
 from app.domain.unit_of_work import UnitOfWork
 
+from app.domain.entities.audit_action import AuditAction
+from app.domain.entities.audit_log import AuditLog
+from app.domain.entities.audit_result import AuditResult
+
+from app.domain.repositories.audit_log_repository import (
+    AuditLogRepository,
+)
+
 
 class CreateSaleUseCase:
 
@@ -22,11 +30,13 @@ class CreateSaleUseCase:
         sale_repository: SaleRepository,
         product_repository: ProductRepository,
         inventory_movement_repository: InventoryMovementRepository,
+        audit_log_repository: AuditLogRepository,
         unit_of_work: UnitOfWork,
     ):
         self.sale_repository = sale_repository
         self.product_repository = product_repository
         self.inventory_movement_repository = inventory_movement_repository
+        self.audit_log_repository = audit_log_repository
         self.unit_of_work = unit_of_work
 
     def execute(
@@ -151,6 +161,35 @@ class CreateSaleUseCase:
                 self.inventory_movement_repository.create_without_commit(
                     movement
                 )
+
+            # Register sale audit log
+            audit_log = AuditLog(
+                id=None,
+                user_id=seller_id,
+                action=AuditAction.SALE_CREATE,
+                entity_type="sale",
+                entity_id=str(sale.id),
+                old_values=None,
+                new_values={
+                    "seller_id": seller_id,
+                    "status": sale.status.value,
+                    "items": [
+                        {
+                            "product_id": item.product_id,
+                            "quantity": item.quantity,
+                            "unit_price": str(item.unit_price),
+                        }
+                        for item in sale.items
+                    ],
+                },
+                result=AuditResult.SUCCESS,
+            )
+
+            audit_log.validate()
+
+            self.audit_log_repository.create_without_commit(
+                audit_log
+            )
 
             # Confirm all database operations
             self.unit_of_work.commit()

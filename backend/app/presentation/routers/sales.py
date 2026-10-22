@@ -110,7 +110,6 @@ def get_sale_by_id(
             detail=str(exc),
         ) from exc
 
-
 @router.patch(
     "/{sale_id}/cancel",
     response_model=SaleResponse,
@@ -125,7 +124,15 @@ def cancel_sale(
     ),
 ) -> SaleResponse:
     try:
-        sale = use_case.execute(sale_id)
+        if current_user.id is None:
+            raise ValueError(
+                "Authenticated user ID is missing"
+            )
+
+        sale = use_case.execute(
+            sale_id=sale_id,
+            cancelled_by_user_id=current_user.id,
+        )
 
         return SaleMapper.entity_to_response(sale)
 

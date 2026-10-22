@@ -11,7 +11,13 @@ from app.domain.repositories.inventory_movement_repository import (
 from app.domain.repositories.product_repository import ProductRepository
 from app.domain.repositories.sale_repository import SaleRepository
 from app.domain.unit_of_work import UnitOfWork
+from app.domain.entities.audit_action import AuditAction
+from app.domain.entities.audit_log import AuditLog
+from app.domain.entities.audit_result import AuditResult
 
+from app.domain.repositories.audit_log_repository import (
+    AuditLogRepository,
+)
 
 class CancelSaleUseCase:
 
@@ -20,14 +26,25 @@ class CancelSaleUseCase:
         sale_repository: SaleRepository,
         product_repository: ProductRepository,
         inventory_movement_repository: InventoryMovementRepository,
+        audit_log_repository: AuditLogRepository,
         unit_of_work: UnitOfWork,
     ):
         self.sale_repository = sale_repository
         self.product_repository = product_repository
         self.inventory_movement_repository = inventory_movement_repository
+        self.audit_log_repository = audit_log_repository
         self.unit_of_work = unit_of_work
 
-    def execute(self, sale_id: int) -> Sale:
+    def execute(
+        self,
+        sale_id: int,
+        cancelled_by_user_id: int,
+    ) -> Sale:
+        
+        if cancelled_by_user_id <= 0:
+            raise ValueError(
+                "Cancelling user ID must be greater than zero"
+            )
 
         if sale_id <= 0:
             raise ValueError(
@@ -41,6 +58,8 @@ class CancelSaleUseCase:
 
         if sale.status == SaleStatus.CANCELLED:
             raise ValueError("Sale is already cancelled")
+        
+        previous_status = sale.status
 
         products_to_restore: list[tuple[Product, int]] = []
 
@@ -89,6 +108,29 @@ class CancelSaleUseCase:
 
             self.sale_repository.update_without_commit(
                 sale
+            )
+
+            # Register sale cancellation audit
+            audit_log = AuditLog(
+                id=None,
+                user_id=cancelled_by_user_id,
+                action=AuditAction.SALE_CANCEL,
+                entity_type="sale",
+                entity_id=str(sale.id),
+                old_values={
+                    "status": previous_status.value,
+                },
+                new_values={
+                    "status": SaleStatus.CANCELLED.value,
+                    "cancelled_by_user_id": cancelled_by_user_id,
+                },
+                result=AuditResult.SUCCESS,
+            )
+
+            audit_log.validate()
+
+            self.audit_log_repository.create_without_commit(
+                audit_log
             )
 
             # Confirm all changes
