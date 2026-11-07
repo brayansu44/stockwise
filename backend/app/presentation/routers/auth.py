@@ -6,7 +6,10 @@ from app.application.dto.user_dto import (
     TokenResponse,
     UserResponse,
 )
-from app.application.use_cases.login_user import LoginUserUseCase
+from app.application.use_cases.login_user import (
+    AuthenticationRejectedError,
+    LoginUserUseCase,
+)
 from app.presentation.dependencies.user_dependencies import (
     get_login_user_use_case,
 )
@@ -39,7 +42,7 @@ def login(
             access_token=access_token,
         )
 
-    except ValueError as exc:
+    except AuthenticationRejectedError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(exc),
