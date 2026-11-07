@@ -35,14 +35,25 @@ def get_user_repository(
 def get_password_hasher() -> Argon2PasswordHasher:
     return Argon2PasswordHasher()
 
-
 def get_create_user_use_case(
-    user_repository: PostgresUserRepository = Depends(get_user_repository),
-    password_hasher: Argon2PasswordHasher = Depends(get_password_hasher),
+    user_repository: PostgresUserRepository = Depends(
+        get_user_repository
+    ),
+    password_hasher: Argon2PasswordHasher = Depends(
+        get_password_hasher
+    ),
+    audit_log_repository: PostgresAuditLogRepository = Depends(
+        get_audit_log_repository
+    ),
+    unit_of_work: SqlAlchemyUnitOfWork = Depends(
+        get_unit_of_work
+    ),
 ) -> CreateUserUseCase:
     return CreateUserUseCase(
         user_repository=user_repository,
         password_hasher=password_hasher,
+        audit_log_repository=audit_log_repository,
+        unit_of_work=unit_of_work,
     )
 
 def get_users_use_case(
@@ -53,17 +64,37 @@ def get_users_use_case(
     )
 
 def get_update_user_use_case(
-    user_repository: PostgresUserRepository = Depends(get_user_repository),
+    user_repository: PostgresUserRepository = Depends(
+        get_user_repository
+    ),
+    audit_log_repository: PostgresAuditLogRepository = Depends(
+        get_audit_log_repository
+    ),
+    unit_of_work: SqlAlchemyUnitOfWork = Depends(
+        get_unit_of_work
+    ),
 ) -> UpdateUserUseCase:
     return UpdateUserUseCase(
         user_repository=user_repository,
+        audit_log_repository=audit_log_repository,
+        unit_of_work=unit_of_work,
     )
 
 def get_change_user_status_use_case(
-    user_repository: PostgresUserRepository = Depends(get_user_repository),
+    user_repository: PostgresUserRepository = Depends(
+        get_user_repository
+    ),
+    audit_log_repository: PostgresAuditLogRepository = Depends(
+        get_audit_log_repository
+    ),
+    unit_of_work: SqlAlchemyUnitOfWork = Depends(
+        get_unit_of_work
+    ),
 ) -> ChangeUserStatusUseCase:
     return ChangeUserStatusUseCase(
         user_repository=user_repository,
+        audit_log_repository=audit_log_repository,
+        unit_of_work=unit_of_work,
     )
 
 def get_token_service() -> JwtTokenService:

@@ -12,6 +12,12 @@ from app.infrastructure.security.password_hasher import (
     Argon2PasswordHasher,
 )
 
+from app.domain.entities.audit_action import AuditAction
+from app.domain.entities.audit_result import AuditResult
+from app.infrastructure.database.models.audit_log_model import (
+    AuditLogModel,
+)
+
 def test_create_user_without_authentication(client):
     # Arrange
     payload = {
@@ -65,7 +71,7 @@ def test_create_user_as_admin(client, db_session):
         json=payload,
         headers=headers,
     )
-    
+
     # Assert: Verify HTTP response
     assert response.status_code == status.HTTP_201_CREATED
 
@@ -93,6 +99,38 @@ def test_create_user_as_admin(client, db_session):
         payload["password"],
         created_user.hashed_password,
     )
+
+    # Verify user creation audit
+    db_session.expire_all()
+
+    audit_logs = db_session.query(AuditLogModel).filter(
+        AuditLogModel.action == AuditAction.CREATE.value,
+        AuditLogModel.entity_type == "user",
+        AuditLogModel.entity_id == str(created_user.id),
+    ).all()
+
+    assert len(audit_logs) == 1
+
+    audit_log = audit_logs[0]
+
+    assert audit_log.user_id == admin.id
+    assert audit_log.action == AuditAction.CREATE.value
+    assert audit_log.entity_type == "user"
+    assert audit_log.entity_id == str(created_user.id)
+    assert audit_log.result == AuditResult.SUCCESS.value
+
+    assert audit_log.old_values is None
+
+    assert audit_log.new_values == {
+        "name": "New Seller",
+        "role": UserRole.SELLER.value,
+        "is_active": True,
+    }
+
+    # Sensitive information must not be audited
+    assert "password" not in audit_log.new_values
+    assert "hashed_password" not in audit_log.new_values
+    assert "email" not in audit_log.new_values
 
 def test_create_user_as_seller_forbidden(client, db_session):
     # Arrange: Create a seller
@@ -343,6 +381,44 @@ def test_update_user_as_admin(client, db_session):
     assert data["role"] == UserRole.INVENTORY_OPERATOR.value
     assert data["is_active"] is True
 
+    # Verify user update audit
+    db_session.expire_all()
+
+    audit_logs = db_session.query(AuditLogModel).filter(
+        AuditLogModel.action == AuditAction.UPDATE.value,
+        AuditLogModel.entity_type == "user",
+        AuditLogModel.entity_id == str(user.id),
+    ).all()
+
+    assert len(audit_logs) == 1
+
+    audit_log = audit_logs[0]
+
+    assert audit_log.user_id == admin.id
+    assert audit_log.action == AuditAction.UPDATE.value
+    assert audit_log.entity_type == "user"
+    assert audit_log.entity_id == str(user.id)
+    assert audit_log.result == AuditResult.SUCCESS.value
+
+    assert audit_log.old_values == {
+        "name": "Original User",
+        "role": UserRole.SELLER.value,
+    }
+
+    assert audit_log.new_values == {
+        "name": "Updated User",
+        "role": UserRole.INVENTORY_OPERATOR.value,
+    }
+
+    # Sensitive information must not be audited
+    for values in (
+        audit_log.old_values,
+        audit_log.new_values,
+    ):
+        assert "password" not in values
+        assert "hashed_password" not in values
+        assert "email" not in values
+
 def test_update_user_not_found(client, db_session):
     # Arrange
     user_repository = PostgresUserRepository(db_session)
@@ -428,6 +504,33 @@ def test_deactivate_user_as_admin(client, db_session):
     assert data["id"] == user.id
     assert data["is_active"] is False
 
+        # Verify user deactivation audit
+    db_session.expire_all()
+
+    audit_logs = db_session.query(AuditLogModel).filter(
+        AuditLogModel.action == AuditAction.DEACTIVATE.value,
+        AuditLogModel.entity_type == "user",
+        AuditLogModel.entity_id == str(user.id),
+    ).all()
+
+    assert len(audit_logs) == 1
+
+    audit_log = audit_logs[0]
+
+    assert audit_log.user_id == admin.id
+    assert audit_log.action == AuditAction.DEACTIVATE.value
+    assert audit_log.entity_type == "user"
+    assert audit_log.entity_id == str(user.id)
+    assert audit_log.result == AuditResult.SUCCESS.value
+
+    assert audit_log.old_values == {
+        "is_active": True,
+    }
+
+    assert audit_log.new_values == {
+        "is_active": False,
+    }
+
 def test_activate_user_as_admin(client, db_session):
     # Arrange
     user_repository = PostgresUserRepository(db_session)
@@ -474,6 +577,33 @@ def test_activate_user_as_admin(client, db_session):
 
     assert data["id"] == user.id
     assert data["is_active"] is True
+
+        # Verify user activation audit
+    db_session.expire_all()
+
+    audit_logs = db_session.query(AuditLogModel).filter(
+        AuditLogModel.action == AuditAction.ACTIVATE.value,
+        AuditLogModel.entity_type == "user",
+        AuditLogModel.entity_id == str(user.id),
+    ).all()
+
+    assert len(audit_logs) == 1
+
+    audit_log = audit_logs[0]
+
+    assert audit_log.user_id == admin.id
+    assert audit_log.action == AuditAction.ACTIVATE.value
+    assert audit_log.entity_type == "user"
+    assert audit_log.entity_id == str(user.id)
+    assert audit_log.result == AuditResult.SUCCESS.value
+
+    assert audit_log.old_values == {
+        "is_active": False,
+    }
+
+    assert audit_log.new_values == {
+        "is_active": True,
+    }
 
 def test_deactivate_user_not_found(client, db_session):
     # Arrange

@@ -4,6 +4,12 @@ from app.application.use_cases.update_user import UpdateUserUseCase
 from app.domain.entities.user import User
 from app.domain.entities.user_role import UserRole
 
+from tests.fakes.fake_audit_log_repository import (
+    FakeAuditLogRepository,
+)
+from app.domain.entities.audit_action import AuditAction
+from app.domain.entities.audit_result import AuditResult
+
 
 class FakeUserRepository:
 
@@ -33,6 +39,19 @@ class FakeUserRepository:
     def update(self, user):
         return user
 
+    def update_without_commit(self, user):
+        return self.update(user)
+
+class FakeUnitOfWork:
+    def __init__(self):
+        self.committed = False
+        self.rolled_back = False
+
+    def commit(self):
+        self.committed = True
+
+    def rollback(self):
+        self.rolled_back = True
 
 def test_update_user_successfully():
 
@@ -50,6 +69,8 @@ def test_update_user_successfully():
 
     use_case = UpdateUserUseCase(
         user_repository=user_repository,
+        audit_log_repository=FakeAuditLogRepository(),
+        unit_of_work=FakeUnitOfWork(),
     )
 
     result = use_case.execute(
@@ -57,6 +78,7 @@ def test_update_user_successfully():
         name="Updated Name",
         email="updated@test.com",
         role=UserRole.INVENTORY_OPERATOR,
+        updated_by_user_id=10,
     )
 
     assert result.id == 1
@@ -72,6 +94,8 @@ def test_update_user_not_found():
 
     use_case = UpdateUserUseCase(
         user_repository=user_repository,
+        audit_log_repository=FakeAuditLogRepository(),
+        unit_of_work=FakeUnitOfWork(),
     )
 
     with pytest.raises(
@@ -83,6 +107,7 @@ def test_update_user_not_found():
             name="Updated Name",
             email="updated@test.com",
             role=UserRole.SELLER,
+            updated_by_user_id=10,
         )
 
 def test_update_user_email_already_exists():
@@ -109,6 +134,8 @@ def test_update_user_email_already_exists():
 
     use_case = UpdateUserUseCase(
         user_repository=user_repository,
+        audit_log_repository=FakeAuditLogRepository(),
+        unit_of_work=FakeUnitOfWork(),
     )
 
     with pytest.raises(
@@ -120,6 +147,73 @@ def test_update_user_email_already_exists():
             name="Second User",
             email="first@test.com",
             role=UserRole.INVENTORY_OPERATOR,
+            updated_by_user_id=10,
         )
 
+def test_update_user_registers_audit_log():
+    # Arrange
+    existing_user = User(
+        id=1,
+        name="Old Name",
+        email="old@test.com",
+        hashed_password="hashed_password",
+        role=UserRole.SELLER,
+    )
 
+    user_repository = FakeUserRepository(
+        users=[existing_user],
+    )
+    audit_log_repository = FakeAuditLogRepository()
+    unit_of_work = FakeUnitOfWork()
+
+    use_case = UpdateUserUseCase(
+        user_repository=user_repository,
+        audit_log_repository=audit_log_repository,
+        unit_of_work=unit_of_work,
+    )
+
+    # Act
+    result = use_case.execute(
+        user_id=1,
+        name="Updated Name",
+        email="updated@test.com",
+        role=UserRole.INVENTORY_OPERATOR,
+        updated_by_user_id=10,
+    )
+
+    # Assert
+    assert result.id == 1
+    assert result.name == "Updated Name"
+    assert result.role == UserRole.INVENTORY_OPERATOR
+
+    assert len(audit_log_repository.audit_logs) == 1
+
+    audit_log = audit_log_repository.audit_logs[0]
+
+    assert audit_log.user_id == 10
+    assert audit_log.action == AuditAction.UPDATE
+    assert audit_log.entity_type == "user"
+    assert audit_log.entity_id == "1"
+    assert audit_log.result == AuditResult.SUCCESS
+
+    assert audit_log.old_values == {
+        "name": "Old Name",
+        "role": UserRole.SELLER.value,
+    }
+
+    assert audit_log.new_values == {
+        "name": "Updated Name",
+        "role": UserRole.INVENTORY_OPERATOR.value,
+    }
+
+    assert unit_of_work.committed is True
+    assert unit_of_work.rolled_back is False
+
+    # Sensitive information must not be audited
+    for values in (
+        audit_log.old_values,
+        audit_log.new_values,
+    ):
+        assert "password" not in values
+        assert "hashed_password" not in values
+        assert "email" not in values

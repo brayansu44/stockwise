@@ -18,6 +18,7 @@ from app.presentation.dependencies.user_dependencies import (
 )
 from app.domain.entities.user_role import UserRole
 from app.presentation.dependencies.role_dependencies import require_roles
+from app.domain.entities.user import User
 
 
 router = APIRouter(
@@ -47,18 +48,30 @@ def get_users(
 )
 def create_user(
     request: CreateUserRequest,
-    use_case: CreateUserUseCase = Depends(get_create_user_use_case),
-    _current_user=Depends(require_roles(UserRole.ADMIN)),
+    use_case: CreateUserUseCase = Depends(
+        get_create_user_use_case
+    ),
+    current_user: User = Depends(
+        require_roles(UserRole.ADMIN)
+    ),
 ) -> UserResponse:
     try:
+        if current_user.id is None:
+            raise ValueError(
+                "Authenticated user ID is missing"
+            )
+
         user = UserMapper.request_to_entity(request)
 
         created_user = use_case.execute(
             user=user,
             plain_password=request.password,
+            created_by_user_id=current_user.id,
         )
 
-        return UserMapper.entity_to_response(created_user)
+        return UserMapper.entity_to_response(
+            created_user
+        )
 
     except ValueError as exc:
         raise HTTPException(
@@ -73,18 +86,29 @@ def create_user(
 def update_user(
     user_id: int,
     request: UpdateUserRequest,
-    use_case: UpdateUserUseCase = Depends(get_update_user_use_case),
-    _current_user=Depends(require_roles(UserRole.ADMIN)),
+    use_case: UpdateUserUseCase = Depends(
+        get_update_user_use_case
+    ),
+    current_user: User = Depends(
+        require_roles(UserRole.ADMIN)
+    ),
 ) -> UserResponse:
     try:
+        if current_user.id is None:
+            raise ValueError(
+                "Authenticated user ID is missing"
+            )
+
         user = use_case.execute(
             user_id=user_id,
             name=request.name,
             email=request.email,
             role=request.role,
+            updated_by_user_id=current_user.id,
         )
 
         return UserMapper.entity_to_response(user)
+
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -97,16 +121,27 @@ def update_user(
 )
 def deactivate_user(
     user_id: int,
-    use_case: ChangeUserStatusUseCase = Depends(get_change_user_status_use_case),
-    _current_user=Depends(require_roles(UserRole.ADMIN)),
+    use_case: ChangeUserStatusUseCase = Depends(
+        get_change_user_status_use_case
+    ),
+    current_user: User = Depends(
+        require_roles(UserRole.ADMIN)
+    ),
 ) -> UserResponse:
     try:
+        if current_user.id is None:
+            raise ValueError(
+                "Authenticated user ID is missing"
+            )
+
         user = use_case.execute(
             user_id=user_id,
             is_active=False,
+            changed_by_user_id=current_user.id,
         )
 
         return UserMapper.entity_to_response(user)
+
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -119,16 +154,27 @@ def deactivate_user(
 )
 def activate_user(
     user_id: int,
-    use_case: ChangeUserStatusUseCase = Depends(get_change_user_status_use_case),
-    _current_user=Depends(require_roles(UserRole.ADMIN)),
+    use_case: ChangeUserStatusUseCase = Depends(
+        get_change_user_status_use_case
+    ),
+    current_user: User = Depends(
+        require_roles(UserRole.ADMIN)
+    ),
 ) -> UserResponse:
     try:
+        if current_user.id is None:
+            raise ValueError(
+                "Authenticated user ID is missing"
+            )
+
         user = use_case.execute(
             user_id=user_id,
             is_active=True,
+            changed_by_user_id=current_user.id,
         )
 
         return UserMapper.entity_to_response(user)
+
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

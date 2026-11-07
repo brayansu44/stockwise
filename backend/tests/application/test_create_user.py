@@ -4,6 +4,11 @@ from app.application.use_cases.create_user import CreateUserUseCase
 from app.domain.entities.user import User
 from app.domain.entities.user_role import UserRole
 
+from tests.fakes.fake_audit_log_repository import (
+    FakeAuditLogRepository,
+)
+from app.domain.entities.audit_action import AuditAction
+from app.domain.entities.audit_result import AuditResult
 
 class FakeUserRepository:
 
@@ -28,12 +33,24 @@ class FakeUserRepository:
 
         return user
 
+    def create_without_commit(self, user):
+        return self.create(user)
 
 class FakePasswordHasher:
 
     def hash(self, password):
         return f"hashed:{password}"
 
+class FakeUnitOfWork:
+    def __init__(self):
+        self.committed = False
+        self.rolled_back = False
+
+    def commit(self):
+        self.committed = True
+
+    def rollback(self):
+        self.rolled_back = True
 
 def test_create_user_successfully():
 
@@ -43,6 +60,8 @@ def test_create_user_successfully():
     use_case = CreateUserUseCase(
         user_repository=user_repository,
         password_hasher=password_hasher,
+        audit_log_repository=FakeAuditLogRepository(),
+        unit_of_work=FakeUnitOfWork(),
     )
 
     user = User(
@@ -56,6 +75,7 @@ def test_create_user_successfully():
     result = use_case.execute(
         user=user,
         plain_password="SecurePassword123!",
+        created_by_user_id=10,
     )
 
     assert result.id == 1
@@ -86,6 +106,8 @@ def test_create_user_email_already_exists():
     use_case = CreateUserUseCase(
         user_repository=user_repository,
         password_hasher=password_hasher,
+        audit_log_repository=FakeAuditLogRepository(),
+        unit_of_work=FakeUnitOfWork(),
     )
 
     user = User(
@@ -103,6 +125,7 @@ def test_create_user_email_already_exists():
         use_case.execute(
             user=user,
             plain_password="SecurePassword123!",
+            created_by_user_id=10,
         )
 
 
@@ -114,6 +137,8 @@ def test_create_user_empty_name():
     use_case = CreateUserUseCase(
         user_repository=user_repository,
         password_hasher=password_hasher,
+        audit_log_repository=FakeAuditLogRepository(),
+        unit_of_work=FakeUnitOfWork(),
     )
 
     user = User(
@@ -131,6 +156,7 @@ def test_create_user_empty_name():
         use_case.execute(
             user=user,
             plain_password="SecurePassword123!",
+            created_by_user_id=10,
         )
 
 
@@ -142,6 +168,8 @@ def test_create_user_empty_email():
     use_case = CreateUserUseCase(
         user_repository=user_repository,
         password_hasher=password_hasher,
+        audit_log_repository=FakeAuditLogRepository(),
+        unit_of_work=FakeUnitOfWork(),
     )
 
     user = User(
@@ -159,6 +187,7 @@ def test_create_user_empty_email():
         use_case.execute(
             user=user,
             plain_password="SecurePassword123!",
+            created_by_user_id=10,
         )
 
 
@@ -170,6 +199,8 @@ def test_create_user_password_too_short():
     use_case = CreateUserUseCase(
         user_repository=user_repository,
         password_hasher=password_hasher,
+        audit_log_repository=FakeAuditLogRepository(),
+        unit_of_work=FakeUnitOfWork(),
     )
 
     user = User(
@@ -187,4 +218,63 @@ def test_create_user_password_too_short():
         use_case.execute(
             user=user,
             plain_password="1234567",
+            created_by_user_id=10,
         )
+
+def test_create_user_registers_audit_log():
+    # Arrange
+    user_repository = FakeUserRepository()
+    password_hasher = FakePasswordHasher()
+    audit_log_repository = FakeAuditLogRepository()
+    unit_of_work = FakeUnitOfWork()
+
+    use_case = CreateUserUseCase(
+        user_repository=user_repository,
+        password_hasher=password_hasher,
+        audit_log_repository=audit_log_repository,
+        unit_of_work=unit_of_work,
+    )
+
+    user = User(
+        id=None,
+        name="New Seller",
+        email="seller@test.com",
+        hashed_password="",
+        role=UserRole.SELLER,
+    )
+
+    # Act
+    result = use_case.execute(
+        user=user,
+        plain_password="SecurePassword123!",
+        created_by_user_id=10,
+    )
+
+    # Assert
+    assert result.id == 1
+
+    assert len(audit_log_repository.audit_logs) == 1
+
+    audit_log = audit_log_repository.audit_logs[0]
+
+    assert audit_log.user_id == 10
+    assert audit_log.action == AuditAction.CREATE
+    assert audit_log.entity_type == "user"
+    assert audit_log.entity_id == str(result.id)
+    assert audit_log.result == AuditResult.SUCCESS
+
+    assert audit_log.old_values is None
+
+    assert audit_log.new_values == {
+        "name": "New Seller",
+        "role": UserRole.SELLER.value,
+        "is_active": True,
+    }
+
+    assert unit_of_work.committed is True
+    assert unit_of_work.rolled_back is False
+
+    # Sensitive information must never be audited
+    assert "hashed_password" not in audit_log.new_values
+    assert "password" not in audit_log.new_values
+    assert "email" not in audit_log.new_values
